@@ -89,6 +89,8 @@ const roleProfiles = {
   "Family-Style Encouragement": "emphasizes warmth, belonging, courage, and tender perseverance"
 };
 
+normalizeTraditionOptions();
+
 form.addEventListener("submit", (event) => {
   event.preventDefault();
   sessionDraft = collectInitialInputs();
@@ -121,9 +123,10 @@ generateButton.addEventListener("click", () => {
 clearButton.addEventListener("click", clearSession);
 
 function collectInitialInputs() {
+  const tradition = document.querySelector("#tradition").value;
   return {
     concern: document.querySelector("#concern").value.trim(),
-    tradition: document.querySelector("#tradition").value,
+    tradition: tradition.startsWith("Anglican") ? "Anglican" : tradition,
     focus: document.querySelector("#focus").value,
     tone: document.querySelector("input[name='tone']:checked").value,
     role: document.querySelector("#role").value
@@ -142,6 +145,25 @@ function collectFollowUps() {
 function containsCrisisLanguage(text) {
   const normalized = text.toLowerCase();
   return crisisTerms.some((term) => normalized.includes(term));
+}
+
+function normalizeTraditionOptions() {
+  const traditionSelect = document.querySelector("#tradition");
+  if (!traditionSelect) {
+    return;
+  }
+
+  const options = Array.from(traditionSelect.options);
+  const anglicanOption = options.find((option) => option.textContent.trim().startsWith("Anglican"));
+  if (anglicanOption) {
+    anglicanOption.textContent = "Anglican";
+    anglicanOption.value = "Anglican";
+    return;
+  }
+
+  const option = new Option("Anglican", "Anglican");
+  const lutheranOption = options.find((item) => item.value === "Lutheran");
+  traditionSelect.add(option, lutheranOption ? lutheranOption.index + 1 : undefined);
 }
 
 function renderCrisisMessage() {
