@@ -430,7 +430,8 @@ function analyzeConcern(userText) {
     ...(medicalOrMentalHealth ? ["counsel", "practical"] : [])
   ];
 
-  const score = primary.score + theological.length * 2 + cognitive.length + (medicalOrMentalHealth ? 1 : 0);
+  const detectedPatternCount = primary.score + theological.length + cognitive.length + (medicalOrMentalHealth ? 1 : 0);
+  const weightedPatternScore = primary.score + theological.length * 2 + cognitive.length + (medicalOrMentalHealth ? 1 : 0);
 
   return {
     likelyEmotions: unique(emotionHits).slice(0, 5),
@@ -438,7 +439,7 @@ function analyzeConcern(userText) {
     possibleCognitiveDistortions: cognitive,
     possibleTheologicalDistortions: theological,
     responseTypes: unique(responseTypes).slice(0, 6),
-    confidence: getConfidence(score, matches.length, userText),
+    confidence: getConfidence(weightedPatternScore, detectedPatternCount, matches.length),
     focus: primary.focus,
     themes: unique([...primary.themes, ...matches.flatMap((item) => item.themes)]).slice(0, 6),
     overlaps: matches.slice(1, 3).map((item) => item.issue),
@@ -464,14 +465,14 @@ function detectEmotions(lower, primary, matches) {
   return [...hits, ...primary.emotions, ...matches.flatMap((item) => item.emotions)];
 }
 
-function getConfidence(score, matchCount, userText) {
-  if (score >= 5 || (score >= 4 && matchCount > 1)) {
+function getConfidence(weightedPatternScore, detectedPatternCount, matchCount) {
+  if (weightedPatternScore >= 5 || (detectedPatternCount >= 4 && matchCount > 1)) {
     return {
       level: "High",
       note: "Shepherd sees several clear textual patterns, though it still only has the words provided here."
     };
   }
-  if (score >= 2 || userText.trim().length > 180) {
+  if (weightedPatternScore >= 2 || detectedPatternCount >= 2) {
     return {
       level: "Moderate",
       note: "Shepherd sees a plausible pattern, but there may be mixed motives, missing history, or context it cannot know."
@@ -573,6 +574,52 @@ function buildConsiderations(analysis) {
   if (analysis.themes.length) {
     considerations.push(`The Scripture tension may be between ${analysis.themes.slice(0, 2).join(" and ")}; both sides deserve attention.`);
   }
+
+  const focusConsiderations = {
+    grief: [
+      "Grief may need faithful lament before it needs a plan; moving too quickly to explanation can leave sorrow unheard.",
+      "Hope in Christ does not require pretending the loss is small."
+    ],
+    fear: [
+      "Fear may be naming a real concern, but it is not wise enough to become the only counselor.",
+      "Peace may begin with one embodied step of trust, not with solving every possible outcome."
+    ],
+    guilt: [
+      "The difference between conviction and condemnation matters here: conviction leads toward confession and life; condemnation leads toward hiding.",
+      "Grace does not make repair unnecessary, but it keeps repair from becoming self-punishment."
+    ],
+    forgiveness: [
+      "Reconciliation may require repentance, truth, time, and rebuilt trust; forgiveness alone does not instantly restore safety.",
+      "Mercy can be sincere while boundaries remain firm."
+    ],
+    conflict: [
+      "The timing and manner of truth-telling may matter as much as the truth being spoken.",
+      "Peace is not the same as avoiding the conversation; it is truth pursued without contempt."
+    ],
+    doubt: [
+      "Confusion may need patient teaching and prayer rather than shame or rushed certainty.",
+      "A hard question can be brought into Christian community without treating doubt as rebellion."
+    ],
+    decision: [
+      "A decision may look spiritual while still being driven by fear, pressure, pride, or avoidance.",
+      "Wise discernment usually compares likely fruit, motives, counsel, and Scripture rather than waiting for one perfect feeling."
+    ],
+    loneliness: [
+      "Isolation can make painful conclusions sound more certain than they are.",
+      "The next faithful step may be one honest conversation, not a complete life overhaul."
+    ],
+    harm: [
+      "Spiritual language should never be used to keep danger hidden or to protect someone who is causing harm.",
+      "Safety and truth-telling can be acts of faithfulness, not failures of love."
+    ],
+    general: [
+      "The concern may need more context before a strong conclusion is wise.",
+      "A humble next step may be to name the burden clearly to one trustworthy person."
+    ]
+  };
+
+  const fallbackConsiderations = focusConsiderations[analysis.focus] || focusConsiderations.general;
+  fallbackConsiderations.forEach((item) => considerations.push(item));
 
   if (!considerations.length) {
     considerations.push("The wording is open-ended, so the wisest posture is humility: name what you know, admit what you do not, and seek counsel before acting.");
