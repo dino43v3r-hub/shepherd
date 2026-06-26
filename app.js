@@ -63,6 +63,57 @@ const scriptureByFocus = {
   ]
 };
 
+const correctionScripture = {
+  blame: [
+    ["Matthew 7:3-5", "Jesus warns against seeing another person's fault while refusing self-examination. The passage does not excuse harm; it calls for humility before judgment."]
+  ],
+  revenge: [
+    ["Romans 12:17-21", "Paul forbids revenge and calls believers to overcome evil with good, while leaving justice in God's hands."]
+  ],
+  contempt: [
+    ["James 3:8-10", "James warns that the same tongue should not bless God and curse people made in God's likeness."]
+  ],
+  despair: [
+    ["Psalm 42:5", "The psalmist speaks to a downcast soul with honest sorrow and renewed hope in God."]
+  ],
+  false_view_of_god: [
+    ["Romans 8:38-39", "Paul says nothing in creation can separate believers from the love of God in Christ Jesus."]
+  ],
+  unforgivable_shame: [
+    ["1 John 1:8-9", "John holds together honest confession and confidence in God's faithful forgiveness."]
+  ],
+  isolation: [
+    ["Proverbs 18:1", "The proverb cautions that isolation can resist sound judgment, though wise boundaries may still be necessary."]
+  ],
+  unsafe_silence: [
+    ["Proverbs 31:8-9", "Wisdom calls God's people to speak for those who need protection and justice."]
+  ],
+  angry_confrontation: [
+    ["James 1:19-20", "James calls believers to be quick to hear, slow to speak, and slow to anger because anger does not produce God's righteousness."]
+  ],
+  guilt_confession: [
+    ["Psalm 32:3-5", "The psalm connects hidden guilt with heaviness and confession with mercy."]
+  ],
+  fear_ruled: [
+    ["2 Timothy 1:7", "Paul reminds Timothy that God gives a spirit of power, love, and self-control, not fear as master."]
+  ],
+  bitterness: [
+    ["Hebrews 12:15", "Hebrews warns that bitterness can take root and spread harm in a community."]
+  ],
+  avoiding_counsel: [
+    ["Proverbs 11:14", "Wisdom literature commends counsel rather than isolated judgment."]
+  ],
+  forgiveness_without_boundaries: [
+    ["Romans 12:18", "Paul calls believers to live peaceably so far as it depends on them, which recognizes limits and does not require enabling harm."]
+  ],
+  passive_patience: [
+    ["Micah 6:8", "The prophet joins humility with doing justice and loving mercy; patience is not the same as passivity toward wrong."]
+  ],
+  condemnation: [
+    ["Romans 8:1", "Paul distinguishes conviction and new life in Christ from condemnation."]
+  ]
+};
+
 const scriptureCategoryByFocus = {
   "Prayer": "Prayer, dependence, and peace before God",
   "Forgiveness": "Forgiveness, mercy, truth, and relational repair",
@@ -94,6 +145,122 @@ const voiceProfiles = {
   "Warm family-style encouragement": "warmth, belonging, courage, and tender perseverance",
   "Neutral and clear": "calm, balanced, and plain-spoken"
 };
+
+const correctionRules = [
+  {
+    type: "blame",
+    phrase: "everyone else is the problem",
+    patterns: ["everyone else", "they always", "they never", "none of this is my fault", "all their fault"],
+    challenge: "There may be real hurt here, but Shepherd would also invite a little room for self-examination. Christian wisdom can name another person's wrong without refusing to ask, 'Lord, is there anything in me that needs truth, repentance, or maturity?'",
+    anchor: "Matthew 7:3-5"
+  },
+  {
+    type: "revenge",
+    phrase: "revenge",
+    patterns: ["revenge", "get them back", "make them pay", "ruin them", "hurt them back", "teach them a lesson"],
+    challenge: "Your anger may be naming something that matters, but revenge is not the same as justice. Shepherd would encourage you to seek protection, truth, and wise help without letting payback become your guide.",
+    anchor: "Romans 12:17-21"
+  },
+  {
+    type: "contempt",
+    phrase: "contempt or dehumanizing language",
+    patterns: ["worthless", "trash", "monster", "evil people", "i hate them", "they are nothing"],
+    challenge: "You may be naming serious harm or disappointment, but contempt can distort discernment. Christian wisdom lets you tell the truth about wrong without surrendering your speech to dehumanizing anger.",
+    anchor: "James 3:8-10"
+  },
+  {
+    type: "despair",
+    phrase: "despair or hopelessness",
+    patterns: ["no hope", "hopeless", "nothing will ever change", "there is no point", "it will never get better"],
+    challenge: "Shepherd would not minimize how heavy this feels. But despair should be treated as a signal to seek support, not as a final verdict on what God can do.",
+    anchor: "Psalm 42:5"
+  },
+  {
+    type: "false_view_of_god",
+    phrase: "God must hate me",
+    patterns: ["god must hate me", "god hates me", "god is punishing me", "god abandoned me"],
+    challenge: "Shepherd would gently challenge that conclusion. Pain, failure, or confusion may call for confession, help, lament, and change, but they do not prove that God hates you.",
+    anchor: "Romans 8:38-39"
+  },
+  {
+    type: "unforgivable_shame",
+    phrase: "I can never be forgiven",
+    patterns: ["can never be forgiven", "god can't forgive me", "too far gone", "unforgivable", "no grace for me"],
+    challenge: "Shepherd would challenge the idea that shame gets the final word. Christian faith names sin honestly, but it also trusts God's mercy more than despair.",
+    anchor: "1 John 1:8-9"
+  },
+  {
+    type: "isolation",
+    phrase: "cut everyone off",
+    patterns: ["cut everyone off", "done with all of them", "never speak to them again", "leave everyone forever"],
+    challenge: "You may be naming real exhaustion and disappointment, but permanent rejection is a heavy conclusion. The next faithful step may be one clear boundary, not turning pain into total isolation.",
+    anchor: "Proverbs 18:1"
+  },
+  {
+    type: "unsafe_silence",
+    phrase: "stay silent around harm",
+    patterns: ["stay silent", "keep quiet", "not tell anyone", "hide it"],
+    requiresAny: ["harm", "abuse", "threat", "unsafe", "hit", "hurt"],
+    challenge: "Shepherd would be careful here: silence can sometimes protect privacy, but it can also protect harm. If someone is being hurt or endangered, wise help and safety matter more than keeping the burden hidden.",
+    anchor: "Proverbs 31:8-9"
+  },
+  {
+    type: "angry_confrontation",
+    phrase: "confront immediately while furious",
+    patterns: ["confront them right now", "tell them off", "i'm furious", "while i'm angry", "right now because i'm angry"],
+    challenge: "Your anger may be pointing to something important, but anger is not always a trustworthy guide for timing. Shepherd would encourage you to wait until you can speak truth without trying to wound.",
+    anchor: "James 1:19-20"
+  },
+  {
+    type: "guilt_confession",
+    phrase: "guilt that may need confession",
+    patterns: ["i feel guilty", "i did wrong", "i lied", "i cheated", "i sinned", "i need to confess"],
+    challenge: "Guilt may be doing useful work if it is calling you toward confession, repair, and grace. Shepherd would not want you to hide from it or drown in it.",
+    anchor: "Psalm 32:3-5"
+  },
+  {
+    type: "fear_ruled",
+    phrase: "fear ruling the decision",
+    patterns: ["i'm too afraid", "fear is stopping me", "i can't because i'm scared", "what if everything goes wrong"],
+    challenge: "Fear may be giving you information, but it should not be allowed to rule alone. Shepherd would invite wisdom, prayer, and counsel before fear makes the decision for you.",
+    anchor: "2 Timothy 1:7"
+  },
+  {
+    type: "bitterness",
+    phrase: "bitterness",
+    patterns: ["bitter", "bitterness", "resent", "resentment", "i refuse to forgive"],
+    challenge: "Your pain may be real, and forgiveness should not be rushed or used to deny harm. Still, bitterness can become its own wound and may need repentance, truth, and wise support.",
+    anchor: "Hebrews 12:15"
+  },
+  {
+    type: "avoiding_counsel",
+    phrase: "avoiding wise counsel",
+    patterns: ["i won't tell anyone", "i don't need advice", "no one can help", "i'll handle it alone"],
+    challenge: "Shepherd would gently question isolation as a strategy. Some burdens become clearer and safer when they are brought to a wise, trustworthy person.",
+    anchor: "Proverbs 11:14"
+  },
+  {
+    type: "forgiveness_without_boundaries",
+    phrase: "forgiveness confused with allowing continued harm",
+    patterns: ["forgive them so i have to let them", "keep treating me this way", "forgiveness means no boundaries", "forgive and go back"],
+    challenge: "Shepherd would challenge that. Forgiveness does not require allowing continued harm. A Christian response can include mercy and boundaries at the same time.",
+    anchor: "Romans 12:18"
+  },
+  {
+    type: "passive_patience",
+    phrase: "patience confused with passivity",
+    patterns: ["just be patient while they keep", "do nothing and wait", "patience means accepting it", "i guess i should just take it"],
+    challenge: "Patience is not the same as passivity. Shepherd would test whether waiting is actually faithful endurance, or whether it has become avoidance of truth, help, or protection.",
+    anchor: "Micah 6:8"
+  },
+  {
+    type: "condemnation",
+    phrase: "conviction confused with condemnation",
+    patterns: ["god is condemning me", "i am condemned", "convicted so god rejects me", "i'm disgusting to god"],
+    challenge: "Conviction can lead toward confession and life; condemnation drives a person away from grace. Shepherd would not treat self-hatred as holiness.",
+    anchor: "Romans 8:1"
+  }
+];
 
 const inferenceRules = [
   {
@@ -265,10 +432,11 @@ function renderCrisisMessage() {
 
 function renderPlan(data) {
   const inference = inferConcern(data.concern);
-  const scripture = scriptureByFocus[inference.focus] || scriptureByFocus.Prayer;
+  const correction = detectNeededCorrection(data.concern, { tradition: data.tradition }, inference, data.voice);
+  const scripture = buildScriptureSelection(inference, correction);
   const voice = voiceProfiles[data.voice] || voiceProfiles["Gentle pastoral"];
-  const humanStep = buildHumanStep(data, inference);
-  const reasoning = buildReasoningPath(data, inference, humanStep);
+  const humanStep = buildHumanStep(data, inference, correction);
+  const reasoning = buildReasoningPath(data, inference, humanStep, correction);
 
   form.classList.add("hidden");
   result.className = "result";
@@ -285,16 +453,77 @@ function renderPlan(data) {
     ${section("Situation Summary", "User-provided reflection", `<p>${buildSummary(data, inference)}</p>`)}
     ${section("Key Themes", "Pastoral wisdom", list(inference.detectedThemes))}
     ${section("Reasoning Path", "Pastoral wisdom", reasoningPath(reasoning))}
+    ${correction.correctionNeeded ? section("Compassionate Correction", "Pastoral wisdom", correctionBlock(correction)) : ""}
     ${section("Scripture with Context", "Scripture", scriptureList(scripture))}
     ${section("Christian Tradition Perspective", "Christian tradition summary", `<p>${escapeHtml(buildTraditionPerspective(data.tradition))}</p><p>This is a summary of a tradition's common emphases, not a universal declaration for every church or believer in that tradition.</p>`)}
-    ${section("Reflection Questions", "Pastoral wisdom", list(buildQuestions(data, inference)))}
+    ${section("Reflection Questions", "Pastoral wisdom", list(buildQuestions(data, inference, correction)))}
     ${section("Suggested Prayer", "Pastoral wisdom", `<p>${buildPrayer(data, inference, voice)}</p>`)}
     ${section("7-Day Pastoral Care Plan", "Pastoral wisdom", orderedList(buildCarePlan(data, inference)))}
     ${section("Recommended Human Next Step", "Pastoral wisdom", `<p>${humanStep}</p>`)}
-    ${section("Boundaries and Cautions", "Caution / safety boundary", list(buildBoundaries()))}
+    ${section("Boundaries and Cautions", "Caution / safety boundary", list(buildBoundaries(correction)))}
   `;
   result.classList.remove("hidden");
   result.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function detectNeededCorrection(userConcern, extractedDetails, discernmentResult, selectedVoice) {
+  const lowerConcern = userConcern.toLowerCase();
+  const matchedRule = correctionRules.find((rule) => {
+    const hasPattern = rule.patterns.some((pattern) => lowerConcern.includes(pattern));
+    const hasRequiredContext = !rule.requiresAny || rule.requiresAny.some((pattern) => lowerConcern.includes(pattern));
+    return hasPattern && hasRequiredContext;
+  });
+
+  if (!matchedRule) {
+    return {
+      correctionNeeded: false,
+      correctionType: "",
+      concernPhrase: "",
+      gentleChallenge: "",
+      biblicalAnchor: "",
+      voiceAdjustedWording: ""
+    };
+  }
+
+  const voiceAdjustedWording = adjustCorrectionForVoice(matchedRule.challenge, selectedVoice, matchedRule.anchor);
+  return {
+    correctionNeeded: true,
+    correctionType: matchedRule.type,
+    concernPhrase: matchedRule.phrase,
+    gentleChallenge: matchedRule.challenge,
+    biblicalAnchor: matchedRule.anchor,
+    voiceAdjustedWording,
+    issueType: discernmentResult.issueType,
+    tradition: extractedDetails.tradition
+  };
+}
+
+function adjustCorrectionForVoice(challenge, selectedVoice, anchor) {
+  if (selectedVoice === "Direct and steady") {
+    return `${challenge} Pause before acting. Test the conclusion, seek wise counsel, and choose a next step that does not deepen harm.`;
+  }
+  if (selectedVoice === "Thoughtful theologian") {
+    return `${challenge} Doctrinally, this needs to be held under both truth and grace; ${anchor} gives a biblical frame for testing the conclusion rather than baptizing it as wisdom.`;
+  }
+  if (selectedVoice === "Trusted Christian friend") {
+    return `${challenge} A faithful friend might say: I believe your pain matters, and I also do not want pain to make the decision for you.`;
+  }
+  if (selectedVoice === "Warm family-style encouragement") {
+    return `${challenge} You do not have to be harsh with yourself to be honest, and you do not have to rush into a reaction to be brave.`;
+  }
+  if (selectedVoice === "Neutral and clear") {
+    return `${challenge} Treat this as something to test, not something to assume is fully true yet.`;
+  }
+  return `${challenge} Shepherd would hold this tenderly, but also invite you to test it before God, Scripture, and wise human counsel.`;
+}
+
+function buildScriptureSelection(inference, correction) {
+  const baseScripture = scriptureByFocus[inference.focus] || scriptureByFocus.Prayer;
+  if (!correction.correctionNeeded) {
+    return baseScripture;
+  }
+  const addedScripture = correctionScripture[correction.correctionType] || [];
+  return [...addedScripture, ...baseScripture].slice(0, 3);
 }
 
 function buildSummary(data, inference) {
@@ -305,17 +534,21 @@ function buildTraditionPerspective(tradition) {
   return traditionPerspectives[tradition] || `You named ${tradition} as a faith background. Shepherd does not have a reviewed static summary for that background yet, so it will keep the tradition note modest and encourage guidance from a trusted leader in that community.`;
 }
 
-function buildQuestions(data, inference) {
-  return [
+function buildQuestions(data, inference, correction) {
+  const questions = [
     `What part of this ${inference.issueType.toLowerCase()} burden feels most important to name before God?`,
     `What would ${inference.primaryNeed.toLowerCase()} look like in one concrete step this week?`,
     "What would it look like to tell the truth without condemning yourself or another person?",
     "Where might Scripture comfort you, and where might it challenge you toward a concrete act of faith?",
     "Who is one mature Christian or appropriate professional you could invite into this with humility and care?"
   ];
+  if (correction.correctionNeeded) {
+    questions.splice(2, 0, `What part of "${correction.concernPhrase}" needs to be tested before you treat it as wisdom?`);
+  }
+  return questions;
 }
 
-function buildReasoningPath(data, inference, humanStep) {
+function buildReasoningPath(data, inference, humanStep, correction) {
   return [
     ["Concern named", shortenPlain(data.concern)],
     ["Likely issue type", inference.issueType],
@@ -324,19 +557,24 @@ function buildReasoningPath(data, inference, humanStep) {
     ["Detected themes", inference.detectedThemes.join("; ")],
     ["Scripture themes selected", inference.scriptureThemes],
     ["Care plan type", inference.carePlanType],
+    ["Correction check", correction.correctionNeeded ? `Possible ${correction.correctionType.replaceAll("_", " ")} concern detected: ${correction.concernPhrase}` : "No specific correction pattern detected."],
     ["Human next step recommended", humanStep],
     ["Confidence note", "This is a structured pastoral preparation draft based on limited user-provided information and static rule logic. It is not final authority, diagnosis, prophecy, counseling, or a substitute for human pastoral care."]
   ];
 }
 
-function buildBoundaries() {
-  return [
+function buildBoundaries(correction) {
+  const boundaries = [
     "Shepherd is a preparation and reflection tool, not a pastor, priest, counselor, doctor, emergency service, or final authority.",
     "The response is generated from static mock logic and user-provided reflection, not from an AI model or a human review.",
     "Shepherd avoids asking users to self-diagnose; the issue type and pastoral needs are inferred transparently and may be incomplete.",
     "Where safety, abuse, severe depression, violence, self-harm, medical concerns, or legal questions may be involved, seek immediate help from appropriate people or professionals.",
     "Print / Save as PDF uses the browser print dialog only. Shepherd does not save, transmit, or store the reflection."
   ];
+  if (correction.correctionNeeded) {
+    boundaries.splice(3, 0, `Compassionate correction is a caution, not a verdict. The concern flagged was "${correction.concernPhrase}", and it should be tested with prayer, Scripture, and wise counsel.`);
+  }
+  return boundaries;
 }
 
 function buildPrayer(data, inference, voice) {
@@ -355,7 +593,21 @@ function buildCarePlan(data, inference) {
   ];
 }
 
-function buildHumanStep(data, inference) {
+function buildHumanStep(data, inference, correction) {
+  if (correction.correctionNeeded) {
+    if (correction.correctionType === "angry_confrontation") {
+      return "Before confronting anyone, wait until anger is no longer steering the timing. Consider writing the concern down, praying, and asking a trusted mature Christian or counselor to help you prepare words that are truthful without trying to wound.";
+    }
+    if (correction.correctionType === "forgiveness_without_boundaries" || correction.correctionType === "unsafe_silence") {
+      return "Talk with a trusted pastor, counselor, doctor, advocate, or safe person about what mercy and protection should look like together. Do not confuse forgiveness, patience, or silence with allowing continued harm.";
+    }
+    if (correction.correctionType === "false_view_of_god" || correction.correctionType === "unforgivable_shame" || correction.correctionType === "condemnation") {
+      return "Bring this conclusion about God or yourself to a trusted pastor, priest, counselor, or mature Christian who can help separate conviction from condemnation and shame from grace.";
+    }
+    if (correction.correctionType === "revenge" || correction.correctionType === "contempt" || correction.correctionType === "bitterness") {
+      return "Before acting, seek wise counsel from a pastor, mentor, counselor, or mature Christian who can help you pursue truth and boundaries without letting bitterness or revenge shape the next step.";
+    }
+  }
   const lowerType = inference.issueType.toLowerCase();
   if (lowerType.includes("grief")) {
     return "Consider speaking with a pastor, priest, grief group, counselor, doctor, or trusted person who can help you carry sorrow with support instead of carrying it alone.";
@@ -370,6 +622,20 @@ function buildHumanStep(data, inference) {
     return "Seek confession, accountability, and practical support from a pastor, priest, mature Christian, counselor, recovery group, or appropriate professional.";
   }
   return "Choose one trusted person this week: a pastor or priest, mature Christian friend, counselor, doctor, mentor, or family member. Shepherd can help you prepare, but discernment belongs in prayerful human community.";
+}
+
+function correctionBlock(correction) {
+  return `
+    <p>${escapeHtml(correction.voiceAdjustedWording)}</p>
+    <div class="reasoning-item">
+      <strong>What may need testing</strong>
+      <span>${escapeHtml(correction.concernPhrase)}</span>
+    </div>
+    <div class="reasoning-item">
+      <strong>Biblical anchor</strong>
+      <span>${escapeHtml(correction.biblicalAnchor)}</span>
+    </div>
+  `;
 }
 
 function scriptureList(items) {

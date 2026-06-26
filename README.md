@@ -44,18 +44,21 @@ Shepherd avoids asking users to self-diagnose. The user names the burden and cho
 
 The user is not required to choose a reflection focus, role lens, grounding preference, care type, issue category, or Scripture category.
 
+Shepherd does not merely affirm the user's assumptions. It compassionately reflects the user's concern, then tests the concern through Scripture, Christian wisdom, and the selected voice. When needed, it offers gentle correction without shame.
+
 The final reflection includes:
 
 1. Situation Summary
 2. Key Themes
 3. Reasoning Path
-4. Scripture with Context
-5. Christian Tradition Perspective
-6. Reflection Questions
-7. Suggested Prayer
-8. 7-Day Pastoral Care Plan
-9. Recommended Human Next Step
-10. Boundaries and Cautions
+4. Compassionate Correction, only when needed
+5. Scripture with Context
+6. Christian Tradition Perspective
+7. Reflection Questions
+8. Suggested Prayer
+9. 7-Day Pastoral Care Plan
+10. Recommended Human Next Step
+11. Boundaries and Cautions
 
 ## Reasoning Path
 
@@ -72,6 +75,21 @@ The Reasoning Path is a transparency section. It shows:
 - A confidence note explaining that Shepherd is pastoral preparation, not final authority
 
 The Reasoning Path should help the user see how the reflection was structured. It should not be treated as a diagnosis, prophecy, counseling conclusion, or replacement for human pastoral care.
+
+## Compassionate Correction
+
+Shepherd includes a rule-based correction and discernment layer. The function `detectNeededCorrection(userConcern, extractedDetails, discernmentResult, selectedVoice)` looks for patterns that may need gentle testing, such as revenge, despair, false conclusions about God, shame that denies grace, bitterness, fear-led decision-making, isolation, confusing forgiveness with allowing continued harm, or confusing conviction with condemnation.
+
+When correction is needed, Shepherd adds a Compassionate Correction section. This section should:
+
+- Acknowledge pain or confusion without automatically agreeing with the user's conclusion
+- Name what may need to be tested
+- Speak in the selected voice
+- Use Scripture or Christian wisdom as the anchor
+- Avoid harsh, shaming, robotic, or preachy language
+- Avoid pretending certainty
+
+The correction also influences Scripture selection, reflection questions, the recommended human next step, and the cautions section.
 
 ## Evidence Levels
 
