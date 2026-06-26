@@ -504,7 +504,7 @@ function renderPlan(data, analysis) {
     ${section("Pastoral Reading", "Pastoral wisdom", buildPastoralReading(data, analysis, voice))}
     ${analysis.possibleTheologicalDistortions.length ? section("Gentle Correction", "Scripture and pastoral wisdom", correctionBlock(analysis, voice)) : ""}
     ${section("Scripture with Context", "Scripture", scriptureList(scriptures))}
-    ${section("Things You May Not Have Considered", "Discernment observations", list(buildObservations(analysis)))}
+    ${section("Things You May Not Have Considered", "Discernment considerations", list(buildConsiderations(analysis)))}
     ${section("Christian Tradition Perspective", "Christian tradition summary", `<p>${escapeHtml(traditionPerspectives[data.tradition])}</p>`)}
     ${section("Suggested Prayer", "Pastoral wisdom", `<p>${escapeHtml(buildPrayer(data, analysis, voice))}</p>`)}
     ${section("Recommended Human Next Step", "Caution / safety boundary", `<p>${escapeHtml(nextStep)}</p>`)}
@@ -547,38 +547,38 @@ function buildScriptureSelection(analysis) {
   return [...theologicalScriptures, ...base].slice(0, 3);
 }
 
-function buildObservations(analysis) {
-  const observations = [];
+function buildConsiderations(analysis) {
+  const considerations = [];
 
   analysis.possibleTheologicalDistortions.forEach((distortion) => {
-    observations.push(distortion.correction);
+    considerations.push(distortion.correction);
   });
 
   analysis.possibleCognitiveDistortions.forEach((distortion) => {
-    observations.push(distortion.observation);
+    considerations.push(distortion.observation);
   });
 
   if (analysis.responseTypes.includes("boundaries")) {
-    observations.push("Forgiveness and boundaries are not enemies. A Christian response can pursue mercy while refusing to enable harm.");
+    considerations.push("Forgiveness and boundaries are not enemies. A Christian response can pursue mercy while refusing to enable harm.");
   }
 
   if (analysis.responseTypes.includes("repentance")) {
-    observations.push("Repentance is not self-punishment. It is truthful return to God, repair where possible, and receiving mercy without pretending sin is harmless.");
+    considerations.push("Repentance is not self-punishment. It is truthful return to God, repair where possible, and receiving mercy without pretending sin is harmless.");
   }
 
   if (analysis.responseTypes.includes("counsel")) {
-    observations.push("This may become clearer when spoken aloud to a mature Christian, pastor, priest, counselor, or trusted friend who can ask careful questions.");
+    considerations.push("This may become clearer when spoken aloud to a mature Christian, pastor, priest, counselor, or trusted friend who can ask careful questions.");
   }
 
   if (analysis.themes.length) {
-    observations.push(`The Scripture tension may be between ${analysis.themes.slice(0, 2).join(" and ")}; both sides deserve attention.`);
+    considerations.push(`The Scripture tension may be between ${analysis.themes.slice(0, 2).join(" and ")}; both sides deserve attention.`);
   }
 
-  if (!observations.length) {
-    observations.push("The wording is open-ended, so the wisest posture is humility: name what you know, admit what you do not, and seek counsel before acting.");
+  if (!considerations.length) {
+    considerations.push("The wording is open-ended, so the wisest posture is humility: name what you know, admit what you do not, and seek counsel before acting.");
   }
 
-  return unique(observations).slice(0, 5);
+  return unique(considerations).slice(0, 5);
 }
 
 function buildPrayer(data, analysis, voice) {

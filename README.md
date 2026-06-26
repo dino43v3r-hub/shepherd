@@ -73,10 +73,6 @@ When these appear, Shepherd should lovingly test the conclusion rather than simp
 
 ## Things You May Not Have Considered
 
-Version 2 replaces the old "Reflection Questions" section with:
-
-> Things You May Not Have Considered
-
 This section gives 3 to 5 observations about blind spots, possible assumptions, Scripture tensions, practical wisdom, or spiritual danger. It is meant to deepen discernment without creating dependence on the tool.
 
 ## Voice-Shaped Reasoning
