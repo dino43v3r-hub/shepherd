@@ -28,51 +28,43 @@
       <section class="workspace" aria-label="Reflection workspace">
         <form id="reflection-form" class="panel">
           <div class="form-grid">
+            <label class="field">
+              <span>Christian tradition</span>
+              <select id="tradition">
+                <option>General Christian</option>
+                <option>Baptist</option>
+                <option>Methodist/Wesleyan</option>
+                <option>Reformed</option>
+                <option>Lutheran</option>
+                <option>Anglican</option>
+                <option>Roman Catholic</option>
+                <option>Eastern Orthodox</option>
+                <option>Pentecostal/Charismatic</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Pastoral / theological voice</span>
+              <select id="voice">
+                <option>Thoughtful pastor</option>
+                <option>Trusted Christian friend</option>
+                <option>Paul</option>
+                <option>Augustine</option>
+                <option>C.S. Lewis</option>
+                <option>Bonhoeffer</option>
+                <option>Spurgeon</option>
+              </select>
+            </label>
+
             <label class="field field-full">
               <span>What is weighing on you?</span>
               <textarea
                 id="concern"
-                rows="9"
+                rows="10"
                 required
-                placeholder="Write honestly about what you are carrying. You can include context, feelings, questions, and what feels unclear."
+                placeholder="Write honestly about what you are carrying. Shepherd will infer the issue, themes, and kind of response needed."
               ></textarea>
             </label>
-
-            <label class="field">
-              <span>Whose voice should this sound like?</span>
-              <select id="voice">
-                <option>Gentle pastoral</option>
-                <option>Trusted Christian friend</option>
-                <option>Thoughtful theologian</option>
-                <option>Direct and steady</option>
-                <option>Warm family-style encouragement</option>
-                <option>Neutral and clear</option>
-              </select>
-            </label>
-
-            <details class="advanced field-full">
-              <summary>Advanced / Optional</summary>
-              <label class="field">
-                <span>Faith tradition / background, if you want Shepherd to consider one</span>
-                <input
-                  id="tradition"
-                  type="text"
-                  list="tradition-options"
-                  placeholder="General Christian, Anglican, Baptist, Catholic..."
-                >
-              </label>
-              <datalist id="tradition-options">
-                <option value="General Christian"></option>
-                <option value="Baptist"></option>
-                <option value="Methodist/Wesleyan"></option>
-                <option value="Reformed"></option>
-                <option value="Lutheran"></option>
-                <option value="Anglican"></option>
-                <option value="Roman Catholic"></option>
-                <option value="Eastern Orthodox"></option>
-                <option value="Pentecostal/Charismatic"></option>
-              </datalist>
-            </details>
           </div>
 
           <div class="actions">

@@ -1,168 +1,127 @@
 # Shepherd
 
-Shepherd is a privacy-first AI-assisted pastoral reflection web app. It helps a person write out an issue, concern, grief, spiritual struggle, or question, then turns that input into a structured Christian reflection and pastoral care plan.
+Shepherd is a privacy-first, static Christian discernment tool. It helps a person write out a concern, grief, conflict, spiritual struggle, or theological question, then turns that input into a structured pastoral reflection.
 
-Version 1 is intentionally static. It does not connect to an AI API, does not create accounts, does not use a database, and does not permanently store user input.
+Shepherd v2 is still intentionally static:
+
+- No backend
+- No login
+- No database
+- No analytics
+- No AI API calls
+- No `localStorage` or `sessionStorage`
+- No permanent storage of user input
+
+User input remains only in browser memory while the page is open. Refreshing or clearing the page removes the current reflection. Print / Save as PDF uses the browser print dialog only.
 
 ## Core Purpose
 
-Shepherd is a preparation and reflection tool. It can help a person organize thoughts before prayer, conversation, confession, pastoral care, counseling, or community discernment.
+Shepherd is a preparation and reflection tool for prayer, Scripture, confession, pastoral care, counseling, and Christian community discernment.
 
-Shepherd is not a replacement for:
+It is not a replacement for:
 
 - A pastor, priest, deacon, elder, bishop, spiritual director, or mature Christian community
 - A counselor, doctor, therapist, or other appropriate professional
 - Emergency services or crisis support
 - Trusted human relationships
 
-## Privacy Model
-
-The app displays the privacy statement:
-
-> Your reflection is not saved.
-
-Version 1 keeps user input only in browser/session memory:
-
-- No login
-- No database
-- No permanent storage
-- No analytics
-- No AI API requests
-- No browser localStorage or sessionStorage
-
-Refreshing the page clears the in-memory flow. The Print / Save as PDF feature uses the browser print dialog only; Shepherd does not save, export, upload, or retain the reflection.
-
 ## User Flow
 
-The user enters:
+The user only selects:
 
-- What is weighing on them
-- Whose voice or tone Shepherd should use
-- Optional faith tradition / background, only if they want Shepherd to consider one
+1. Christian tradition
+2. Pastoral / theological voice
+3. Their concern or problem
 
-Shepherd avoids asking users to self-diagnose. The user names the burden and chooses a voice. Shepherd then transparently discerns the likely issue type, pastoral needs, Scripture themes, and next steps.
+Shepherd does not ask extra follow-up questions or require the user to self-diagnose. The app infers the likely issue, focus, emotional and spiritual themes, and needed response type from the concern text.
 
-The user is not required to choose a reflection focus, role lens, grounding preference, care type, issue category, or Scripture category.
+## Discernment Engine
 
-Shepherd does not merely affirm the user's assumptions. It compassionately reflects the user's concern, then tests the concern through Scripture, Christian wisdom, and the selected voice. When needed, it offers gentle correction without shame.
+Version 2 includes a static rule-based function:
 
-Shepherd analyzes the user's actual words before generating the reflection. Version 1 uses static rule-based functions:
+```js
+analyzeConcern(userText)
+```
 
-- `extractConcernDetails()` identifies details such as emotions, relationship settings, desired actions, absolute language, safety language, and matched concern keywords.
-- `scorePastoralNeeds()` scores multiple overlapping pastoral needs instead of relying on the first keyword match.
-- `buildPersonalizedInsight()` summarizes what Shepherd noticed in the user's wording.
-- `buildWisestNextStep()` uses extracted details, discernment results, and correction cautions to recommend a next step.
+It detects possible:
 
-The final reflection includes:
+- Emotions
+- Spiritual or pastoral issue
+- Cognitive distortion
+- Theological distortion
+- Needed response type, such as comfort, correction, warning, encouragement, repentance, boundaries, counsel, or practical next steps
+- Confidence level: high, moderate, or low
 
-1. Situation Summary
-2. Key Themes
-3. Reasoning Path
-4. Compassionate Correction, only when needed
-5. Scripture with Context
-6. Christian Tradition Perspective
-7. Reflection Questions
-8. Suggested Prayer
-9. 7-Day Pastoral Care Plan
-10. Wisest Next Step
-11. Boundaries and Cautions
+The analysis shapes the final reflection, but the app avoids presenting it as a cold diagnostic report. Confidence language stays humble and non-clinical.
 
-## Reasoning Path
+## Theological and Cognitive Distortions
 
-The Reasoning Path is a transparency section. It shows:
+Shepherd v2 can gently correct spiritually harmful conclusions, including ideas such as:
 
-- What concern the user named
-- The likely issue type Shepherd inferred
-- The primary and secondary pastoral needs Shepherd inferred
-- What themes were detected by the static mock logic
-- Why those themes matter for prayer and discernment
-- What Scripture themes were selected
-- What care plan type was selected
-- What wisest next step was recommended
-- A confidence note explaining that Shepherd is pastoral preparation, not final authority
+- God hates me
+- God abandoned me
+- I can never be forgiven
+- I have to earn God's love
+- My suffering proves I failed
+- Forgiveness means no boundaries
+- I should stay silent about harm
+- I just need more faith and then everything will be fixed
 
-The Reasoning Path should help the user see how the reflection was structured. It should not be treated as a diagnosis, prophecy, counseling conclusion, or replacement for human pastoral care.
+It also checks for cognitive and spiritual patterns such as all-or-nothing thinking, despair, shame, blame shifting, revenge, bitterness, fear-led decisions, isolation, confusing conviction with condemnation, confusing patience with passivity, and confusing forgiveness with enabling harm.
 
-## Compassionate Correction
+When these appear, Shepherd should lovingly test the conclusion rather than simply affirm it.
 
-Shepherd includes a rule-based correction and discernment layer. The function `detectNeededCorrection(userConcern, extractedDetails, discernmentResult, selectedVoice)` looks for patterns that may need gentle testing, such as revenge, despair, false conclusions about God, shame that denies grace, bitterness, fear-led decision-making, isolation, confusing forgiveness with allowing continued harm, or confusing conviction with condemnation.
+## Things You May Not Have Considered
 
-When correction is needed, Shepherd adds a Compassionate Correction section. This section should:
+Version 2 replaces the old "Reflection Questions" section with:
 
-- Acknowledge pain or confusion without automatically agreeing with the user's conclusion
-- Name what may need to be tested
-- Speak in the selected voice
-- Use Scripture or Christian wisdom as the anchor
-- Avoid harsh, shaming, robotic, or preachy language
-- Avoid pretending certainty
+> Things You May Not Have Considered
 
-The correction also influences Scripture selection, reflection questions, the wisest next step, and the cautions section.
+This section gives 3 to 5 observations about blind spots, possible assumptions, Scripture tensions, practical wisdom, or spiritual danger. It is meant to deepen discernment without creating dependence on the tool.
 
-## Evidence Levels
+## Voice-Shaped Reasoning
 
-Each major output section displays an evidence label:
+The selected voice changes reasoning emphasis, not just tone.
 
-- Scripture
-- Christian tradition summary
-- Pastoral wisdom
-- User-provided reflection
-- Caution / safety boundary
+Current voices:
 
-These labels help distinguish biblical context, denominational summaries, practical pastoral guidance, user-provided content, and safety cautions.
+- Paul: grace, union with Christ, endurance, correction, community
+- Augustine: disordered loves, confession, restlessness, desire
+- C.S. Lewis: imagination, reason, pride, humility, moral clarity
+- Bonhoeffer: costly obedience, community, discipleship, action
+- Spurgeon: comfort, hope, tenderness, gospel assurance
+- Thoughtful pastor: balanced pastoral care
+- Trusted Christian friend: warm but honest companionship
+
+Each voice can comfort, challenge, and disagree with the user's conclusion when needed.
+
+## Dynamic Human Next Steps
+
+The recommended next step changes based on the detected issue:
+
+- Crisis or unsafe language: immediate human help, emergency support, crisis support, or safety planning
+- Guilt or sin: confession, repentance, repair, accountability, and pastoral counsel
+- Grief: pastor, mature Christian friend, grief support, prayerful community, or counselor
+- Relationship conflict: mediator, pastor, priest, counselor, or mature Christian
+- Theological confusion: pastor, priest, Bible study leader, or spiritual director
+- Loneliness or isolation: one trusted person this week
+- Medical or mental health language: doctor or counselor plus pastoral support
+
+## Compare Faithful Perspectives
+
+After the first response, Shepherd offers:
+
+> Compare faithful perspectives
+
+This shows three brief responses from different voices, then names where they agree and how they differ. The goal is to teach discernment, not dependence on AI.
 
 ## Safety Boundaries
 
-If the user's text includes crisis language related to self-harm, suicide, abuse, immediate danger, severe depression, violence, or emergencies, Shepherd does not generate a normal pastoral plan.
+If the user's text includes crisis language related to self-harm, suicide, abuse, immediate danger, severe depression, violence, or emergencies, Shepherd does not generate a normal pastoral reflection.
 
-Instead, it displays a crisis/support message that:
+Instead, it displays a crisis/support message encouraging immediate human help from emergency services, crisis support, trusted clergy, trusted people, counselors, doctors, or appropriate local services.
 
-- Says the app cannot handle emergencies
-- Encourages immediate help from emergency services when danger is present
-- Names crisis support, trusted clergy, trusted people, counselors, doctors, and appropriate professionals
-- Encourages moving toward safety and human support right away
-
-The crisis language check is simple static keyword logic in Version 1. It is not a clinical classifier.
-
-## Pastoral Voice System
-
-The voice settings change tone, vocabulary, warmth, and emphasis only.
-
-Voice options:
-
-- Gentle pastoral
-- Trusted Christian friend
-- Thoughtful theologian
-- Direct and steady
-- Warm family-style encouragement
-- Neutral and clear
-
-Important limitation: Shepherd must not pretend to be real clergy, a counselor, a doctor, or a final authority. The generated output explicitly states that voice settings only shape wording and emphasis.
-
-## Denominational Perspective System
-
-Version 1 includes static summaries for:
-
-- General Christian
-- Baptist
-- Methodist/Wesleyan
-- Reformed
-- Lutheran
-- Anglican
-- Roman Catholic
-- Eastern Orthodox
-- Pentecostal/Charismatic
-
-These are presented as summaries of common tradition emphases, not universal declarations. The app avoids absolute claims where traditions differ and encourages users to seek actual pastoral guidance within their community.
-
-## Scripture Approach
-
-Shepherd includes Scripture passages with short context notes. The goal is to avoid proof-texting by briefly explaining how each passage functions in its biblical context.
-
-Future versions should expand this system with richer context, denominational sensitivity, and review by qualified Christian leaders from different traditions.
-
-## User-Controlled Print
-
-The Print / Save as PDF button calls the browser's print dialog. It does not create a server-side export, store a file, upload content, or keep a copy in the app.
+The crisis check is simple static keyword logic. It is not a clinical classifier.
 
 ## Running Locally
 
@@ -180,13 +139,9 @@ Shepherd/
 
 ## Future Roadmap
 
-- Add a reviewed prompt system for optional AI-assisted generation
-- Add an explicit consent step before any future API call
-- Keep a no-storage mode as the default
-- Improve print styling while keeping export user-controlled and storage-free
-- Improve crisis detection and escalation language with professional review
+- Add reviewed optional AI-assisted generation only after explicit consent
+- Keep no-storage mode as the default
+- Improve crisis detection and safety language with professional review
 - Expand Scripture context notes and denominational summaries
-- Add richer reasoning transparency and user-editable assumptions
+- Add broader pastoral review from different Christian traditions
 - Add accessibility testing and keyboard-flow refinements
-- Add optional local-only draft saving controlled by the user
-- Add pastoral-review workflows before any public deployment
