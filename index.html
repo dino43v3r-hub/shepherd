@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Shepherd</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="intro" aria-labelledby="app-title">
+        <p class="eyebrow">Privacy-first pastoral reflection</p>
+        <h1 id="app-title">Shepherd</h1>
+        <p class="lede">
+          Write out an issue, concern, grief, spiritual struggle, or question.
+          Shepherd turns it into a structured Christian reflection and pastoral care plan.
+        </p>
+        <div class="privacy-note" role="note">
+          <strong>Your reflection is not saved.</strong>
+          <span>Everything stays in this browser session. No login, no database, no AI API.</span>
+        </div>
+        <p class="boundary">
+          Shepherd is a preparation and reflection tool. It is not a replacement for a pastor,
+          priest, counselor, doctor, emergency service, or trusted human relationship.
+        </p>
+      </section>
+
+      <section class="workspace" aria-label="Reflection workspace">
+        <form id="reflection-form" class="panel">
+          <div class="form-grid">
+            <label class="field field-full">
+              <span>Concern or issue</span>
+              <textarea
+                id="concern"
+                rows="9"
+                required
+                placeholder="Write honestly about what you are carrying. You can include context, feelings, questions, and what feels unclear."
+              ></textarea>
+            </label>
+
+            <label class="field">
+              <span>Christian tradition</span>
+              <select id="tradition">
+                <option>General Christian</option>
+                <option>Baptist</option>
+                <option>Methodist/Wesleyan</option>
+                <option>Reformed</option>
+                <option>Lutheran</option>
+                <option>Roman Catholic</option>
+                <option>Eastern Orthodox</option>
+                <option>Pentecostal/Charismatic</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Reflection focus</span>
+              <select id="focus">
+                <option>Prayer</option>
+                <option>Forgiveness</option>
+                <option>Grief</option>
+                <option>Decision-making</option>
+                <option>Marriage/family</option>
+                <option>Anxiety/fear</option>
+                <option>Faith/doubt</option>
+                <option>Habit/sin struggle</option>
+              </select>
+            </label>
+
+            <fieldset class="field">
+              <legend>Voice tone</legend>
+              <div class="segmented">
+                <label><input type="radio" name="tone" value="Female" checked><span>Female</span></label>
+                <label><input type="radio" name="tone" value="Male"><span>Male</span></label>
+                <label><input type="radio" name="tone" value="Neutral"><span>Neutral</span></label>
+              </div>
+            </fieldset>
+
+            <label class="field">
+              <span>Role lens</span>
+              <select id="role">
+                <option>Pastor / Priest</option>
+                <option>Deacon / Deaconess</option>
+                <option>Bishop / Elder</option>
+                <option>Theologian</option>
+                <option>Trusted Christian Friend</option>
+                <option>Family-Style Encouragement</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="actions">
+            <button type="submit" class="primary">Continue to questions</button>
+            <button type="button" id="clear-button" class="secondary">Clear session</button>
+          </div>
+        </form>
+
+        <section id="follow-up-panel" class="panel hidden" aria-labelledby="follow-up-title">
+          <h2 id="follow-up-title">A few grounding questions</h2>
+          <p class="panel-copy">
+            These help shape the reflection. You can answer briefly, skip any question, or use this as a pause before continuing.
+          </p>
+          <div class="form-grid">
+            <label class="field">
+              <span>How long have you been carrying this?</span>
+              <input id="duration" type="text" placeholder="A few days, months, years...">
+            </label>
+            <label class="field">
+              <span>Have you talked with anyone you trust about it?</span>
+              <input id="trusted-person" type="text" placeholder="Pastor, friend, spouse, counselor...">
+            </label>
+            <label class="field">
+              <span>What have you already tried?</span>
+              <input id="already-tried" type="text" placeholder="Prayer, conversation, rest, boundaries...">
+            </label>
+            <label class="field">
+              <span>What are you hoping God will help you discern?</span>
+              <input id="discernment" type="text" placeholder="Wisdom, courage, forgiveness, next step...">
+            </label>
+          </div>
+          <div class="actions">
+            <button type="button" id="generate-button" class="primary">Create reflection</button>
+            <button type="button" id="back-button" class="secondary">Back</button>
+          </div>
+        </section>
+
+        <section id="result" class="result hidden" aria-live="polite"></section>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
