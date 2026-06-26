@@ -506,10 +506,10 @@ function renderPlan(data, analysis) {
     ${analysis.possibleTheologicalDistortions.length ? section("Gentle Correction", "Scripture and pastoral wisdom", correctionBlock(analysis, voice)) : ""}
     ${section("Scripture with Context", "Scripture", scriptureList(scriptures))}
     ${section("Things You May Not Have Considered", "Discernment considerations", list(buildConsiderations(analysis)))}
+    ${section("Discernment Confidence", "Pastoral wisdom", buildConfidenceNote(analysis))}
     ${section("Christian Tradition Perspective", "Christian tradition summary", `<p>${escapeHtml(traditionPerspectives[data.tradition])}</p>`)}
     ${section("Suggested Prayer", "Pastoral wisdom", `<p>${escapeHtml(buildPrayer(data, analysis, voice))}</p>`)}
     ${section("Recommended Human Next Step", "Caution / safety boundary", `<p>${escapeHtml(nextStep)}</p>`)}
-    ${section("Discernment Confidence", "Humility note", `<p><strong>${escapeHtml(analysis.confidence.level)}:</strong> ${escapeHtml(analysis.confidence.note)}</p>`)}
     ${section("Boundaries and Cautions", "Caution / safety boundary", list(buildBoundaries(analysis)))}
   `;
   result.classList.remove("hidden");
@@ -626,6 +626,10 @@ function buildConsiderations(analysis) {
   }
 
   return unique(considerations).slice(0, 5);
+}
+
+function buildConfidenceNote(analysis) {
+  return `<p><strong>${escapeHtml(analysis.confidence.level)}:</strong> ${escapeHtml(analysis.confidence.note)}</p>`;
 }
 
 function buildPrayer(data, analysis, voice) {
