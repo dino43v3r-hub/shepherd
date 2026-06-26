@@ -105,6 +105,51 @@ const roleProfiles = {
   "Family-Style Encouragement": "emphasizes warmth, belonging, courage, and tender perseverance"
 };
 
+const modeProfiles = {
+  "Pastoral Care": {
+    tone: "gentle pastoral care, steadiness, prayer, and next faithful steps",
+    themes: ["Receiving care without shame", "Bringing the concern into prayer and community"],
+    question: "What kind of pastoral care would help you feel less alone while you discern this?",
+    plan: "Ask for prayer or a pastoral conversation with someone trustworthy, naming one concrete kind of support you need.",
+    humanStep: "A pastor, priest, deacon, elder, or mature Christian can help you pray, sort the concern, and decide what support is appropriate."
+  },
+  "Theologian": {
+    tone: "careful theological reflection, humility, distinctions, and Scripture in context",
+    themes: ["Careful theological distinction", "Humility where Christians may differ"],
+    question: "What theological question sits underneath this concern, and what would need careful study rather than a quick answer?",
+    plan: "Write one theological question clearly, then compare it with Scripture, your tradition, and wise teaching before drawing conclusions.",
+    humanStep: "A trusted pastor, priest, catechist, teacher, or theologian can help you test ideas without turning reflection into isolation."
+  },
+  "Trusted Christian Friend": {
+    tone: "warm companionship, honest encouragement, and practical support",
+    themes: ["Companionship in the burden", "Encouragement without minimizing the struggle"],
+    question: "What would you be able to say to a trusted Christian friend that you have not wanted to carry alone?",
+    plan: "Send a brief message to one trusted Christian friend asking for prayer, a listening ear, or a simple check-in.",
+    humanStep: "A trusted Christian friend can sit with you, pray with you, and help you take one faithful next step without pretending to have all the answers."
+  },
+  "Decision Discernment": {
+    tone: "patient discernment, wise counsel, motives, tradeoffs, and peaceable next steps",
+    themes: ["Clarifying motives and options", "Seeking wisdom before acting"],
+    question: "What options are actually before you, and which one seems most aligned with love of God and neighbor?",
+    plan: "List the realistic options, the likely fruit of each, and one wise person who can help you test your assumptions.",
+    humanStep: "A pastor, mentor, counselor, or wise Christian friend can help you slow down, test motives, and choose a next step with humility."
+  },
+  "Grief Support": {
+    tone: "tender lament, patient presence, memory, and hope without rushing sorrow",
+    themes: ["Permission to lament", "Hope that does not rush grief"],
+    question: "What part of this grief needs to be named before God before you try to make sense of it?",
+    plan: "Make space for lament: read a psalm, name the loss plainly, and do one gentle act of remembrance or rest.",
+    humanStep: "A pastor, priest, grief group, counselor, doctor, or trusted person can help you carry sorrow with support instead of carrying it alone."
+  },
+  "Habit / Sin Struggle": {
+    tone: "honest confession, grace, accountability, concrete practices, and hope for change",
+    themes: ["Confession without despair", "Grace-shaped accountability"],
+    question: "What pattern, trigger, or hidden burden keeps this struggle repeating, and who could help you face it truthfully?",
+    plan: "Choose one practical interruption: remove one trigger, confess to a trusted mature Christian, and plan one replacement practice.",
+    humanStep: "A pastor, priest, mature Christian, counselor, recovery group, or appropriate professional can help with confession, accountability, and practical support."
+  }
+};
+
 normalizeTraditionOptions();
 
 form.addEventListener("submit", (event) => {
@@ -155,6 +200,7 @@ function collectInitialInputs() {
     concern: document.querySelector("#concern").value.trim(),
     tradition: tradition.startsWith("Anglican") ? "Anglican" : tradition,
     focus: document.querySelector("#focus").value,
+    mode: document.querySelector("#mode").value,
     tone: document.querySelector("input[name='tone']:checked").value,
     role: document.querySelector("#role").value
   };
@@ -217,9 +263,10 @@ function renderCrisisMessage() {
 }
 
 function renderPlan(data) {
-  const themes = inferThemes(data.concern, data.focus);
+  const themes = inferThemes(data.concern, data.focus, data.mode);
   const scripture = scriptureByFocus[data.focus] || scriptureByFocus.Prayer;
-  const voice = `${voiceProfiles[data.tone]}; ${roleProfiles[data.role]}`;
+  const mode = modeProfiles[data.mode] || modeProfiles["Pastoral Care"];
+  const voice = `${voiceProfiles[data.tone]}; ${roleProfiles[data.role]}; ${mode.tone}`;
   const summary = buildSummary(data);
   const humanStep = buildHumanStep(data);
   const reasoning = buildReasoningPath(data, themes, humanStep);
@@ -230,7 +277,7 @@ function renderPlan(data) {
     <div class="result-header">
       <h2>Your pastoral reflection draft</h2>
       <p>This is a mock, static reflection generated in browser memory. It is preparation for prayer, discernment, and human pastoral care.</p>
-      <p class="fine-print">Voice setting: ${escapeHtml(data.tone)} tone through a ${escapeHtml(data.role)} lens. This changes wording and emphasis only; Shepherd is not claiming to be clergy, a counselor, or an authority figure.</p>
+      <p class="fine-print">Voice setting: ${escapeHtml(data.tone)} tone through a ${escapeHtml(data.role)} lens in ${escapeHtml(data.mode)} mode. These settings change wording and emphasis only; Shepherd is not claiming to be clergy, a counselor, a doctor, or final spiritual authority.</p>
       <div class="result-actions">
         <button type="button" id="print-button" class="primary">Print / Save as PDF</button>
         <button type="button" id="result-clear-button" class="secondary">Clear Everything</button>
@@ -255,23 +302,27 @@ function buildSummary(data) {
   const duration = data.followUps.duration || "an unspecified amount of time";
   const tried = data.followUps.alreadyTried || "some steps that may still need naming";
   const discernment = data.followUps.discernment || "a wise and faithful next step";
-  return `You are bringing a ${data.focus.toLowerCase()} concern connected to this situation: "${shorten(data.concern)}" You have been carrying it for ${escapeHtml(duration)}. You have already tried ${escapeHtml(tried)}, and you are hoping God will help you discern ${escapeHtml(discernment)}.`;
+  return `You are bringing a ${data.focus.toLowerCase()} concern in ${data.mode.toLowerCase()} mode connected to this situation: "${shorten(data.concern)}" You have been carrying it for ${escapeHtml(duration)}. You have already tried ${escapeHtml(tried)}, and you are hoping God will help you discern ${escapeHtml(discernment)}.`;
 }
 
-function inferThemes(concern, focus) {
+function inferThemes(concern, focus, modeName) {
   const lower = concern.toLowerCase();
+  const mode = modeProfiles[modeName] || modeProfiles["Pastoral Care"];
   const themes = ["Honest prayer without shame", "Discernment with trusted Christian community"];
   if (lower.includes("forgive") || focus === "Forgiveness") themes.push("Forgiveness with truth and healthy boundaries");
   if (lower.includes("grief") || lower.includes("loss") || focus === "Grief") themes.push("Lament, memory, and hope");
   if (lower.includes("anxious") || lower.includes("fear") || focus === "Anxiety/fear") themes.push("Fear named before God rather than hidden");
   if (lower.includes("sin") || lower.includes("habit") || focus === "Habit/sin struggle") themes.push("Repentance joined to grace and practical support");
   if (lower.includes("family") || lower.includes("marriage") || focus === "Marriage/family") themes.push("Patient truth-telling and repair where possible");
+  themes.push(...mode.themes);
   return [...new Set(themes)].slice(0, 5);
 }
 
 function buildQuestions(data) {
+  const mode = modeProfiles[data.mode] || modeProfiles["Pastoral Care"];
   return [
     `What part of this ${data.focus.toLowerCase()} concern feels heaviest when you pray about it?`,
+    mode.question,
     "What would it look like to tell the truth without condemning yourself or another person?",
     "Where might Scripture comfort you, and where might it challenge you toward a concrete act of faith?",
     "Who is one mature Christian or appropriate professional you could invite into this with humility and care?",
@@ -283,6 +334,7 @@ function buildReasoningPath(data, themes, humanStep) {
   return [
     ["Concern named", shortenPlain(data.concern)],
     ["Themes detected", themes.join("; ")],
+    ["Mode selected", `${data.mode}: changes wording and emphasis only, not authority or credentials.`],
     ["Why these themes matter", "These themes help separate what the user described from the pastoral questions that may need prayer, Scripture, wise counsel, and practical next steps."],
     ["Scripture category selected", scriptureCategoryByFocus[data.focus] || scriptureCategoryByFocus.Prayer],
     ["Human next step recommended", humanStep],
@@ -309,23 +361,25 @@ function buildPrayer(data, voice) {
 }
 
 function buildCarePlan(data) {
+  const mode = modeProfiles[data.mode] || modeProfiles["Pastoral Care"];
   return [
     "Day 1: Read the first Scripture passage slowly. Write one honest sentence of prayer.",
     "Day 2: Name the facts, feelings, fears, and hopes separately so they do not blur together.",
     "Day 3: Ask what repentance, forgiveness, courage, grief, or patience may look like without forcing a false conclusion.",
     `Day 4: Consider one practice from the ${data.tradition} tradition that could support you, such as prayer, confession, counsel, worship, service, or spiritual direction.`,
-    "Day 5: Share a brief version of this concern with a trusted Christian or appropriate professional.",
+    `Day 5: ${mode.plan}`,
     "Day 6: Take one small embodied step: rest, make an appointment, write a letter you may not send, apologize, set a boundary, or ask for help.",
     "Day 7: Review what changed, what remains unclear, and what human next step is now wise."
   ];
 }
 
 function buildHumanStep(data) {
+  const mode = modeProfiles[data.mode] || modeProfiles["Pastoral Care"];
   const trusted = data.followUps.trustedPerson;
   if (trusted) {
-    return `Because you mentioned ${escapeHtml(trusted)}, consider making that conversation concrete: ask for a time to talk, bring a short summary, and be clear about whether you need prayer, counsel, accountability, or practical help.`;
+    return `Because you mentioned ${escapeHtml(trusted)}, consider making that conversation concrete: ask for a time to talk, bring a short summary, and be clear about whether you need prayer, counsel, accountability, or practical help. In ${escapeHtml(data.mode)} mode, the emphasis is: ${escapeHtml(mode.humanStep)}`;
   }
-  return "Choose one trusted person this week: a pastor or priest, mature Christian friend, counselor, doctor, mentor, or family member. Shepherd can help you prepare, but discernment belongs in prayerful human community.";
+  return `${mode.humanStep} Shepherd can help you prepare, but discernment belongs in prayerful human community.`;
 }
 
 function scriptureList(items) {

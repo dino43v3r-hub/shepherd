@@ -39,6 +39,7 @@ The user enters:
 - Concern or issue
 - Christian tradition
 - Reflection focus
+- Shepherd mode
 - Pastoral voice tone
 - Role lens
 
@@ -120,6 +121,29 @@ Role lens options:
 - Family-Style Encouragement
 
 Important limitation: Shepherd must not pretend to be real clergy, a counselor, a doctor, or a final authority. The generated output explicitly states that voice settings only shape wording and emphasis.
+
+## Shepherd Modes
+
+Shepherd Modes change wording and emphasis only. They do not claim that the app is real clergy, a counselor, a doctor, a theologian, or final spiritual authority.
+
+Mode options:
+
+- Pastoral Care
+- Theologian
+- Trusted Christian Friend
+- Decision Discernment
+- Grief Support
+- Habit / Sin Struggle
+
+The selected mode affects:
+
+- Tone
+- Key themes
+- Reflection questions
+- 7-day care plan
+- Recommended human next step
+
+Mode logic is static and local. It does not use an AI API, store user input, or send data anywhere.
 
 ## Denominational Perspective System
 
