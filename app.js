@@ -68,6 +68,7 @@ const traditionPerspectives = {
   "Methodist/Wesleyan": "A Methodist/Wesleyan summary often emphasizes grace that heals and forms us, practical holiness, prayer, Scripture, small-group support, and love of God and neighbor.",
   "Reformed": "A Reformed summary often emphasizes God's sovereignty, covenant faithfulness, Scripture, repentance and faith, wise pastoral care, and hope grounded in Christ.",
   "Lutheran": "A Lutheran summary often emphasizes law and gospel, honest confession, the promise of grace in Christ, vocation, prayer, and receiving care through Word and sacrament.",
+  "Anglican / 1928 Prayer Book": "An Anglican summary shaped by the 1928 Book of Common Prayer often emphasizes ordered prayer, Scripture, confession and absolution, the collects, sacramental life, pastoral counsel, and steady formation through the Church's common worship.",
   "Roman Catholic": "A Roman Catholic summary often emphasizes prayer, conscience formation, sacramental life, spiritual direction, works of mercy, and guidance from the Church's moral tradition.",
   "Eastern Orthodox": "An Eastern Orthodox summary often emphasizes healing, repentance as returning to God, prayer, the life of the Church, spiritual counsel, and growth in communion with Christ.",
   "Pentecostal/Charismatic": "A Pentecostal/Charismatic summary often emphasizes prayer, the Holy Spirit's comfort and gifts, Scripture, worship, discernment in community, and hopeful dependence on God."

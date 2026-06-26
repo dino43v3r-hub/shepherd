@@ -103,6 +103,7 @@ Version 1 includes static summaries for:
 - Methodist/Wesleyan
 - Reformed
 - Lutheran
+- Anglican / 1928 Prayer Book
 - Roman Catholic
 - Eastern Orthodox
 - Pentecostal/Charismatic
