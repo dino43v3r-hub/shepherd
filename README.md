@@ -36,19 +36,13 @@ Refreshing the page clears the in-memory flow. The Print / Save as PDF feature u
 
 The user enters:
 
-- Concern or issue
-- Christian tradition
-- Reflection focus
-- Shepherd mode
-- Pastoral voice tone
-- Role lens
+- What is weighing on them
+- Whose voice or tone Shepherd should use
+- Optional faith tradition / background, only if they want Shepherd to consider one
 
-Before creating a plan, Shepherd asks a few follow-up questions:
+Shepherd avoids asking users to self-diagnose. The user names the burden and chooses a voice. Shepherd then transparently discerns the likely issue type, pastoral needs, Scripture themes, and next steps.
 
-- How long have you been carrying this?
-- Have you talked with anyone you trust about it?
-- What have you already tried?
-- What are you hoping God will help you discern?
+The user is not required to choose a reflection focus, role lens, grounding preference, care type, issue category, or Scripture category.
 
 The final reflection includes:
 
@@ -68,9 +62,12 @@ The final reflection includes:
 The Reasoning Path is a transparency section. It shows:
 
 - What concern the user named
+- The likely issue type Shepherd inferred
+- The primary and secondary pastoral needs Shepherd inferred
 - What themes were detected by the static mock logic
 - Why those themes matter for prayer and discernment
-- What Scripture category was selected
+- What Scripture themes were selected
+- What care plan type was selected
 - What human next step was recommended
 - A confidence note explaining that Shepherd is pastoral preparation, not final authority
 
@@ -105,45 +102,16 @@ The crisis language check is simple static keyword logic in Version 1. It is not
 
 The voice settings change tone, vocabulary, warmth, and emphasis only.
 
-Voice tone options:
+Voice options:
 
-- Female
-- Male
-- Neutral
-
-Role lens options:
-
-- Pastor / Priest
-- Deacon / Deaconess
-- Bishop / Elder
-- Theologian
-- Trusted Christian Friend
-- Family-Style Encouragement
+- Gentle pastoral
+- Trusted Christian friend
+- Thoughtful theologian
+- Direct and steady
+- Warm family-style encouragement
+- Neutral and clear
 
 Important limitation: Shepherd must not pretend to be real clergy, a counselor, a doctor, or a final authority. The generated output explicitly states that voice settings only shape wording and emphasis.
-
-## Shepherd Modes
-
-Shepherd Modes change wording and emphasis only. They do not claim that the app is real clergy, a counselor, a doctor, a theologian, or final spiritual authority.
-
-Mode options:
-
-- Pastoral Care
-- Theologian
-- Trusted Christian Friend
-- Decision Discernment
-- Grief Support
-- Habit / Sin Struggle
-
-The selected mode affects:
-
-- Tone
-- Key themes
-- Reflection questions
-- 7-day care plan
-- Recommended human next step
-
-Mode logic is static and local. It does not use an AI API, store user input, or send data anywhere.
 
 ## Denominational Perspective System
 

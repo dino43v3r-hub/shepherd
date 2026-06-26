@@ -153,7 +153,7 @@ h3 {
 }
 
 .field span,
-legend {
+.advanced summary {
   color: var(--ink);
   font-size: 0.92rem;
   font-weight: 700;
@@ -166,6 +166,22 @@ fieldset {
   border: 0;
   padding: 0;
   margin: 0;
+}
+
+.advanced {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fbfcfa;
+}
+
+.advanced summary {
+  min-height: 0;
+  cursor: pointer;
+}
+
+.advanced .field {
+  margin-top: 14px;
 }
 
 textarea,
@@ -412,7 +428,7 @@ button {
   }
 
   .field span,
-  legend {
+  .advanced summary {
     min-height: 0;
   }
 

@@ -29,7 +29,7 @@
         <form id="reflection-form" class="panel">
           <div class="form-grid">
             <label class="field field-full">
-              <span>Concern or issue</span>
+              <span>What is weighing on you?</span>
               <textarea
                 id="concern"
                 rows="9"
@@ -39,103 +39,47 @@
             </label>
 
             <label class="field">
-              <span>Christian tradition</span>
-              <select id="tradition">
-                <option>General Christian</option>
-                <option>Baptist</option>
-                <option>Methodist/Wesleyan</option>
-                <option>Reformed</option>
-                <option>Lutheran</option>
-                <option>Anglican</option>
-                <option>Roman Catholic</option>
-                <option>Eastern Orthodox</option>
-                <option>Pentecostal/Charismatic</option>
+              <span>Whose voice should this sound like?</span>
+              <select id="voice">
+                <option>Gentle pastoral</option>
+                <option>Trusted Christian friend</option>
+                <option>Thoughtful theologian</option>
+                <option>Direct and steady</option>
+                <option>Warm family-style encouragement</option>
+                <option>Neutral and clear</option>
               </select>
             </label>
 
-            <label class="field">
-              <span>Reflection focus</span>
-              <select id="focus">
-                <option>Prayer</option>
-                <option>Forgiveness</option>
-                <option>Grief</option>
-                <option>Decision-making</option>
-                <option>Marriage/family</option>
-                <option>Anxiety/fear</option>
-                <option>Faith/doubt</option>
-                <option>Habit/sin struggle</option>
-              </select>
-            </label>
-
-            <label class="field">
-              <span>Shepherd mode</span>
-              <select id="mode">
-                <option>Pastoral Care</option>
-                <option>Theologian</option>
-                <option>Trusted Christian Friend</option>
-                <option>Decision Discernment</option>
-                <option>Grief Support</option>
-                <option>Habit / Sin Struggle</option>
-              </select>
-            </label>
-
-            <fieldset class="field">
-              <legend>Voice tone</legend>
-              <div class="segmented">
-                <label><input type="radio" name="tone" value="Female" checked><span>Female</span></label>
-                <label><input type="radio" name="tone" value="Male"><span>Male</span></label>
-                <label><input type="radio" name="tone" value="Neutral"><span>Neutral</span></label>
-              </div>
-            </fieldset>
-
-            <label class="field">
-              <span>Role lens</span>
-              <select id="role">
-                <option>Pastor / Priest</option>
-                <option>Deacon / Deaconess</option>
-                <option>Bishop / Elder</option>
-                <option>Theologian</option>
-                <option>Trusted Christian Friend</option>
-                <option>Family-Style Encouragement</option>
-              </select>
-            </label>
+            <details class="advanced field-full">
+              <summary>Advanced / Optional</summary>
+              <label class="field">
+                <span>Faith tradition / background, if you want Shepherd to consider one</span>
+                <input
+                  id="tradition"
+                  type="text"
+                  list="tradition-options"
+                  placeholder="General Christian, Anglican, Baptist, Catholic..."
+                >
+              </label>
+              <datalist id="tradition-options">
+                <option value="General Christian"></option>
+                <option value="Baptist"></option>
+                <option value="Methodist/Wesleyan"></option>
+                <option value="Reformed"></option>
+                <option value="Lutheran"></option>
+                <option value="Anglican"></option>
+                <option value="Roman Catholic"></option>
+                <option value="Eastern Orthodox"></option>
+                <option value="Pentecostal/Charismatic"></option>
+              </datalist>
+            </details>
           </div>
 
           <div class="actions">
-            <button type="submit" class="primary">Continue to questions</button>
+            <button type="submit" class="primary">Create reflection</button>
             <button type="button" id="clear-button" class="secondary">Clear Everything</button>
           </div>
         </form>
-
-        <section id="follow-up-panel" class="panel hidden" aria-labelledby="follow-up-title">
-          <h2 id="follow-up-title">A few grounding questions</h2>
-          <p class="panel-copy">
-            These help shape the reflection. You can answer briefly, skip any question, or use this as a pause before continuing.
-          </p>
-          <div class="form-grid">
-            <label class="field">
-              <span>How long have you been carrying this?</span>
-              <input id="duration" type="text" placeholder="A few days, months, years...">
-            </label>
-            <label class="field">
-              <span>Have you talked with anyone you trust about it?</span>
-              <input id="trusted-person" type="text" placeholder="Pastor, friend, spouse, counselor...">
-            </label>
-            <label class="field">
-              <span>What have you already tried?</span>
-              <input id="already-tried" type="text" placeholder="Prayer, conversation, rest, boundaries...">
-            </label>
-            <label class="field">
-              <span>What are you hoping God will help you discern?</span>
-              <input id="discernment" type="text" placeholder="Wisdom, courage, forgiveness, next step...">
-            </label>
-          </div>
-          <div class="actions">
-            <button type="button" id="generate-button" class="primary">Create reflection</button>
-            <button type="button" id="back-button" class="secondary">Back</button>
-            <button type="button" id="follow-up-clear-button" class="secondary">Clear Everything</button>
-          </div>
-        </section>
 
         <section id="result" class="result hidden" aria-live="polite"></section>
       </section>
