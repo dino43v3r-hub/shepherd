@@ -46,6 +46,13 @@ The user is not required to choose a reflection focus, role lens, grounding pref
 
 Shepherd does not merely affirm the user's assumptions. It compassionately reflects the user's concern, then tests the concern through Scripture, Christian wisdom, and the selected voice. When needed, it offers gentle correction without shame.
 
+Shepherd analyzes the user's actual words before generating the reflection. Version 1 uses static rule-based functions:
+
+- `extractConcernDetails()` identifies details such as emotions, relationship settings, desired actions, absolute language, safety language, and matched concern keywords.
+- `scorePastoralNeeds()` scores multiple overlapping pastoral needs instead of relying on the first keyword match.
+- `buildPersonalizedInsight()` summarizes what Shepherd noticed in the user's wording.
+- `buildWisestNextStep()` uses extracted details, discernment results, and correction cautions to recommend a next step.
+
 The final reflection includes:
 
 1. Situation Summary
@@ -57,7 +64,7 @@ The final reflection includes:
 7. Reflection Questions
 8. Suggested Prayer
 9. 7-Day Pastoral Care Plan
-10. Recommended Human Next Step
+10. Wisest Next Step
 11. Boundaries and Cautions
 
 ## Reasoning Path
@@ -71,7 +78,7 @@ The Reasoning Path is a transparency section. It shows:
 - Why those themes matter for prayer and discernment
 - What Scripture themes were selected
 - What care plan type was selected
-- What human next step was recommended
+- What wisest next step was recommended
 - A confidence note explaining that Shepherd is pastoral preparation, not final authority
 
 The Reasoning Path should help the user see how the reflection was structured. It should not be treated as a diagnosis, prophecy, counseling conclusion, or replacement for human pastoral care.
@@ -89,7 +96,7 @@ When correction is needed, Shepherd adds a Compassionate Correction section. Thi
 - Avoid harsh, shaming, robotic, or preachy language
 - Avoid pretending certainty
 
-The correction also influences Scripture selection, reflection questions, the recommended human next step, and the cautions section.
+The correction also influences Scripture selection, reflection questions, the wisest next step, and the cautions section.
 
 ## Evidence Levels
 

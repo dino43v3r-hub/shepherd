@@ -390,8 +390,9 @@ function normalizeTradition(value) {
 }
 
 function inferConcern(concern) {
-  const lower = concern.toLowerCase();
-  const matched = inferenceRules.find((rule) => rule.keywords.some((keyword) => lower.includes(keyword))) || {
+  const extractedDetails = extractConcernDetails(concern);
+  const scoredNeeds = scorePastoralNeeds(extractedDetails);
+  const primaryRule = scoredNeeds[0]?.rule || {
     issueType: "General spiritual burden",
     focus: "Prayer",
     carePlanType: "Pastoral reflection and prayer",
@@ -399,12 +400,130 @@ function inferConcern(concern) {
     secondaryNeed: "Trusted Christian community and practical next steps",
     themes: ["Honest prayer without shame", "Discernment with trusted Christian community", "Bringing the burden into God's light"]
   };
+  const secondaryRule = scoredNeeds[1]?.rule;
+  const themes = scoredNeeds
+    .flatMap((need) => need.rule.themes)
+    .concat(primaryRule.themes);
 
   return {
-    ...matched,
-    detectedThemes: [...new Set(["Honest prayer without shame", ...matched.themes])].slice(0, 5),
-    scriptureThemes: scriptureCategoryByFocus[matched.focus] || scriptureCategoryByFocus.Prayer
+    ...primaryRule,
+    extractedDetails,
+    scoredNeeds,
+    likelyIssueTypes: scoredNeeds.map((need) => need.rule.issueType),
+    secondaryIssueType: secondaryRule?.issueType || "",
+    secondaryNeed: secondaryRule?.primaryNeed || primaryRule.secondaryNeed,
+    detectedThemes: [...new Set(["Honest prayer without shame", ...themes])].slice(0, 6),
+    scriptureThemes: buildScriptureThemes(scoredNeeds, primaryRule),
+    personalizedInsight: buildPersonalizedInsight(extractedDetails, {
+      primary: primaryRule,
+      secondary: secondaryRule,
+      scoredNeeds
+    })
   };
+}
+
+function extractConcernDetails(userConcern) {
+  const lower = userConcern.toLowerCase();
+  const sentences = userConcern
+    .split(/[.!?]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const matchedKeywords = inferenceRules.flatMap((rule) =>
+    rule.keywords
+      .filter((keyword) => lower.includes(keyword))
+      .map((keyword) => ({ keyword, issueType: rule.issueType }))
+  );
+  const correctionSignals = correctionRules
+    .filter((rule) => rule.patterns.some((pattern) => lower.includes(pattern)))
+    .map((rule) => rule.phrase);
+  const emotionWords = [
+    "angry", "furious", "sad", "afraid", "scared", "anxious", "ashamed", "guilty",
+    "lonely", "confused", "hurt", "bitter", "overwhelmed", "tired", "exhausted"
+  ].filter((word) => lower.includes(word));
+  const relationshipWords = [
+    "family", "mother", "father", "parent", "spouse", "wife", "husband", "child",
+    "friend", "church", "pastor", "coworker", "boss"
+  ].filter((word) => lower.includes(word));
+  const timeWords = [
+    "today", "right now", "for years", "for months", "for weeks", "again", "always", "never"
+  ].filter((word) => lower.includes(word));
+  const desiredActions = [
+    "confront", "leave", "forgive", "confess", "hide", "stay silent", "cut", "decide",
+    "quit", "move", "apologize", "tell them"
+  ].filter((word) => lower.includes(word));
+
+  return {
+    originalConcern: userConcern,
+    lowerConcern: lower,
+    sentences,
+    matchedKeywords,
+    correctionSignals,
+    emotionWords: [...new Set(emotionWords)],
+    relationshipWords: [...new Set(relationshipWords)],
+    timeWords: [...new Set(timeWords)],
+    desiredActions: [...new Set(desiredActions)],
+    hasAbsolutes: /\b(always|never|forever|everyone|no one|nothing)\b/.test(lower),
+    hasGodConclusion: /\bgod\b/.test(lower) && /\b(hate|punish|abandon|forgive|condemn)\w*\b/.test(lower),
+    hasSafetyLanguage: /\b(abuse|harm|unsafe|threat|hit|violence|assault)\b/.test(lower)
+  };
+}
+
+function scorePastoralNeeds(extractedDetails) {
+  const lower = extractedDetails.lowerConcern;
+  const scored = inferenceRules.map((rule) => {
+    const keywordHits = rule.keywords.filter((keyword) => lower.includes(keyword));
+    let score = keywordHits.length * 3;
+    if (rule.issueType.includes("Grief") && extractedDetails.emotionWords.includes("sad")) score += 1;
+    if (rule.issueType.includes("Anxiety") && extractedDetails.emotionWords.some((word) => ["afraid", "scared", "anxious", "overwhelmed"].includes(word))) score += 2;
+    if (rule.issueType.includes("Decision") && extractedDetails.desiredActions.some((word) => ["decide", "quit", "move"].includes(word))) score += 2;
+    if (rule.issueType.includes("Relationship") && extractedDetails.relationshipWords.length) score += 1;
+    if (rule.issueType.includes("Habit") && extractedDetails.emotionWords.includes("guilty")) score += 1;
+    return { rule, score, keywordHits };
+  })
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  if (scored.length) {
+    return scored;
+  }
+
+  return [{
+    rule: {
+      issueType: "General spiritual burden",
+      focus: "Prayer",
+      carePlanType: "Pastoral reflection and prayer",
+      primaryNeed: "Honest prayer and careful naming",
+      secondaryNeed: "Trusted Christian community and practical next steps",
+      themes: ["Honest prayer without shame", "Discernment with trusted Christian community", "Bringing the burden into God's light"],
+      keywords: []
+    },
+    score: 1,
+    keywordHits: []
+  }];
+}
+
+function buildScriptureThemes(scoredNeeds, primaryRule) {
+  const themes = scoredNeeds
+    .map((need) => scriptureCategoryByFocus[need.rule.focus])
+    .filter(Boolean);
+  return [...new Set(themes.length ? themes : [scriptureCategoryByFocus[primaryRule.focus] || scriptureCategoryByFocus.Prayer])].join("; ");
+}
+
+function buildPersonalizedInsight(extractedDetails, discernmentResult) {
+  const emotionText = extractedDetails.emotionWords.length
+    ? `The words suggest ${joinHumanList(extractedDetails.emotionWords)} may be part of what you are carrying.`
+    : "The concern needs careful naming before it is solved.";
+  const relationshipText = extractedDetails.relationshipWords.length
+    ? `It also appears connected to ${joinHumanList(extractedDetails.relationshipWords)}.`
+    : "No specific relationship setting was clearly named.";
+  const overlapText = discernmentResult.secondary
+    ? `This may not be only ${discernmentResult.primary.issueType.toLowerCase()}; it also overlaps with ${discernmentResult.secondary.issueType.toLowerCase()}.`
+    : `The strongest inferred need is ${discernmentResult.primary.primaryNeed.toLowerCase()}.`;
+  const cautionText = extractedDetails.hasAbsolutes
+    ? "Words like always, never, forever, or no one may need to be tested because pain can make conclusions feel more total than they are."
+    : "Shepherd is treating this as a partial reading, not a complete judgment.";
+
+  return `${emotionText} ${relationshipText} ${overlapText} ${cautionText}`;
 }
 
 function renderCrisisMessage() {
@@ -432,11 +551,11 @@ function renderCrisisMessage() {
 
 function renderPlan(data) {
   const inference = inferConcern(data.concern);
-  const correction = detectNeededCorrection(data.concern, { tradition: data.tradition }, inference, data.voice);
+  const correction = detectNeededCorrection(data.concern, { tradition: data.tradition, ...inference.extractedDetails }, inference, data.voice);
   const scripture = buildScriptureSelection(inference, correction);
   const voice = voiceProfiles[data.voice] || voiceProfiles["Gentle pastoral"];
-  const humanStep = buildHumanStep(data, inference, correction);
-  const reasoning = buildReasoningPath(data, inference, humanStep, correction);
+  const wisestStep = buildWisestNextStep(data, inference.extractedDetails, inference, correction);
+  const reasoning = buildReasoningPath(data, inference, wisestStep, correction);
 
   form.classList.add("hidden");
   result.className = "result";
@@ -459,7 +578,7 @@ function renderPlan(data) {
     ${section("Reflection Questions", "Pastoral wisdom", list(buildQuestions(data, inference, correction)))}
     ${section("Suggested Prayer", "Pastoral wisdom", `<p>${buildPrayer(data, inference, voice)}</p>`)}
     ${section("7-Day Pastoral Care Plan", "Pastoral wisdom", orderedList(buildCarePlan(data, inference)))}
-    ${section("Recommended Human Next Step", "Pastoral wisdom", `<p>${humanStep}</p>`)}
+    ${section("Wisest Next Step", "Pastoral wisdom", `<p>${wisestStep}</p>`)}
     ${section("Boundaries and Cautions", "Caution / safety boundary", list(buildBoundaries(correction)))}
   `;
   result.classList.remove("hidden");
@@ -527,7 +646,7 @@ function buildScriptureSelection(inference, correction) {
 }
 
 function buildSummary(data, inference) {
-  return `You named this burden: "${shorten(data.concern)}" Shepherd's rule-based reading suggests a likely issue type of ${escapeHtml(inference.issueType.toLowerCase())}, with a primary pastoral need for ${escapeHtml(inference.primaryNeed.toLowerCase())} and a secondary need for ${escapeHtml(inference.secondaryNeed.toLowerCase())}.`;
+  return `You named this burden: "${shorten(data.concern)}" ${escapeHtml(inference.personalizedInsight)} Shepherd's rule-based reading suggests a likely issue type of ${escapeHtml(inference.issueType.toLowerCase())}, with a primary pastoral need for ${escapeHtml(inference.primaryNeed.toLowerCase())} and a secondary need for ${escapeHtml(inference.secondaryNeed.toLowerCase())}.`;
 }
 
 function buildTraditionPerspective(tradition) {
@@ -535,11 +654,14 @@ function buildTraditionPerspective(tradition) {
 }
 
 function buildQuestions(data, inference, correction) {
+  const details = inference.extractedDetails;
   const questions = [
     `What part of this ${inference.issueType.toLowerCase()} burden feels most important to name before God?`,
     `What would ${inference.primaryNeed.toLowerCase()} look like in one concrete step this week?`,
+    details.emotionWords.length ? `How might ${joinHumanList(details.emotionWords)} be shaping what feels true right now?` : "What feeling is loudest when you slow down and pray?",
+    details.relationshipWords.length ? `What would love and truth require in relation to ${joinHumanList(details.relationshipWords)}?` : "Who is affected by this concern besides you?",
     "What would it look like to tell the truth without condemning yourself or another person?",
-    "Where might Scripture comfort you, and where might it challenge you toward a concrete act of faith?",
+    `Where might these Scripture themes comfort or challenge you: ${inference.scriptureThemes}?`,
     "Who is one mature Christian or appropriate professional you could invite into this with humility and care?"
   ];
   if (correction.correctionNeeded) {
@@ -548,17 +670,20 @@ function buildQuestions(data, inference, correction) {
   return questions;
 }
 
-function buildReasoningPath(data, inference, humanStep, correction) {
+function buildReasoningPath(data, inference, wisestStep, correction) {
+  const details = inference.extractedDetails;
   return [
     ["Concern named", shortenPlain(data.concern)],
+    ["Details noticed", buildDetailsLine(details)],
     ["Likely issue type", inference.issueType],
+    ["Other overlapping needs", inference.likelyIssueTypes.slice(1).join("; ") || "No strong secondary issue type detected."],
     ["Primary pastoral need", inference.primaryNeed],
     ["Secondary pastoral need", inference.secondaryNeed],
     ["Detected themes", inference.detectedThemes.join("; ")],
     ["Scripture themes selected", inference.scriptureThemes],
     ["Care plan type", inference.carePlanType],
     ["Correction check", correction.correctionNeeded ? `Possible ${correction.correctionType.replaceAll("_", " ")} concern detected: ${correction.concernPhrase}` : "No specific correction pattern detected."],
-    ["Human next step recommended", humanStep],
+    ["Wisest next step", wisestStep],
     ["Confidence note", "This is a structured pastoral preparation draft based on limited user-provided information and static rule logic. It is not final authority, diagnosis, prophecy, counseling, or a substitute for human pastoral care."]
   ];
 }
@@ -582,18 +707,22 @@ function buildPrayer(data, inference, voice) {
 }
 
 function buildCarePlan(data, inference) {
+  const details = inference.extractedDetails;
+  const detailPrompt = details.matchedKeywords.length
+    ? `Pay attention to these named signals: ${joinHumanList(details.matchedKeywords.map((item) => item.keyword).slice(0, 5))}.`
+    : "Pay attention to the exact words you used, especially where the burden feels most charged.";
   return [
     "Day 1: Read the first Scripture passage slowly. Write one honest sentence of prayer.",
     `Day 2: Name what feels heaviest about this ${inference.issueType.toLowerCase()} burden without trying to solve it all at once.`,
     `Day 3: Ask what ${inference.primaryNeed.toLowerCase()} would look like in one small faithful action.`,
-    `Day 4: Consider one practice from the ${data.tradition} tradition that could support you, such as prayer, confession, counsel, worship, service, or spiritual direction.`,
+    `Day 4: ${detailPrompt}`,
     `Day 5: Follow the ${inference.carePlanType.toLowerCase()} path by sharing a brief version of this burden with a trusted Christian or appropriate professional.`,
-    "Day 6: Take one embodied step: rest, make an appointment, write a letter you may not send, apologize, set a boundary, or ask for help.",
-    "Day 7: Review what changed, what remains unclear, and what human next step is now wise."
+    `Day 6: Consider one practice from the ${data.tradition} tradition that could support you, such as prayer, confession, counsel, worship, service, or spiritual direction.`,
+    "Day 7: Review what changed, what remains unclear, and what wisest next step is now appropriate."
   ];
 }
 
-function buildHumanStep(data, inference, correction) {
+function buildWisestNextStep(data, extractedDetails, discernmentResult, correction) {
   if (correction.correctionNeeded) {
     if (correction.correctionType === "angry_confrontation") {
       return "Before confronting anyone, wait until anger is no longer steering the timing. Consider writing the concern down, praying, and asking a trusted mature Christian or counselor to help you prepare words that are truthful without trying to wound.";
@@ -608,7 +737,13 @@ function buildHumanStep(data, inference, correction) {
       return "Before acting, seek wise counsel from a pastor, mentor, counselor, or mature Christian who can help you pursue truth and boundaries without letting bitterness or revenge shape the next step.";
     }
   }
-  const lowerType = inference.issueType.toLowerCase();
+  if (extractedDetails.hasSafetyLanguage) {
+    return "Because safety-related language appears in the concern, the wisest next step is to speak with a safe trusted person or appropriate professional rather than carrying this alone.";
+  }
+  if (extractedDetails.desiredActions.includes("decide") || extractedDetails.desiredActions.includes("quit") || extractedDetails.desiredActions.includes("move")) {
+    return "Before acting, write down the real options, the likely fruit of each, and one wise person who can help you test the decision.";
+  }
+  const lowerType = discernmentResult.issueType.toLowerCase();
   if (lowerType.includes("grief")) {
     return "Consider speaking with a pastor, priest, grief group, counselor, doctor, or trusted person who can help you carry sorrow with support instead of carrying it alone.";
   }
@@ -674,6 +809,27 @@ function reasoningPath(items) {
       <span>${escapeHtml(detail)}</span>
     </div>
   `).join("")}</div>`;
+}
+
+function buildDetailsLine(details) {
+  const parts = [];
+  if (details.emotionWords.length) parts.push(`emotions: ${joinHumanList(details.emotionWords)}`);
+  if (details.relationshipWords.length) parts.push(`relationships/settings: ${joinHumanList(details.relationshipWords)}`);
+  if (details.desiredActions.length) parts.push(`desired actions: ${joinHumanList(details.desiredActions)}`);
+  if (details.timeWords.length) parts.push(`time/intensity words: ${joinHumanList(details.timeWords)}`);
+  if (details.hasAbsolutes) parts.push("absolute language appears");
+  return parts.length ? parts.join("; ") : "No specific detail cluster stood out strongly.";
+}
+
+function joinHumanList(items) {
+  const cleanItems = [...new Set(items)].filter(Boolean);
+  if (cleanItems.length <= 1) {
+    return cleanItems[0] || "";
+  }
+  if (cleanItems.length === 2) {
+    return `${cleanItems[0]} and ${cleanItems[1]}`;
+  }
+  return `${cleanItems.slice(0, -1).join(", ")}, and ${cleanItems[cleanItems.length - 1]}`;
 }
 
 function shorten(text) {
