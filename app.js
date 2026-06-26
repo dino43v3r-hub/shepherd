@@ -2,9 +2,14 @@ const form = document.querySelector("#reflection-form");
 const followUpPanel = document.querySelector("#follow-up-panel");
 const result = document.querySelector("#result");
 const clearButton = document.querySelector("#clear-button");
+const followUpClearButton = document.querySelector("#follow-up-clear-button");
 const backButton = document.querySelector("#back-button");
 const generateButton = document.querySelector("#generate-button");
 
+// Privacy model:
+// Shepherd has no backend, no database, no analytics, no localStorage/sessionStorage, and no AI API.
+// User text lives only in browser memory while this page is open; refreshing the page clears it.
+// Print/export uses the browser's print dialog only and is fully user-controlled.
 let sessionDraft = null;
 
 const crisisTerms = [
@@ -60,6 +65,17 @@ const scriptureByFocus = {
     ["Romans 6:11-14", "Paul calls believers to live from union with Christ, resisting sin's rule through grace."],
     ["1 John 1:8-9", "John holds together honesty about sin and confidence in God's faithful forgiveness."]
   ]
+};
+
+const scriptureCategoryByFocus = {
+  "Prayer": "Prayer, dependence, and peace before God",
+  "Forgiveness": "Forgiveness, mercy, truth, and relational repair",
+  "Grief": "Lament, mourning, hope, and Christ's presence in sorrow",
+  "Decision-making": "Wisdom, trust, humility, and discernment",
+  "Marriage/family": "Household love, patience, peace, and reconciliation where possible",
+  "Anxiety/fear": "Fear, trust, humility, and God's care",
+  "Faith/doubt": "Honest doubt, belief, encounter, and patient trust",
+  "Habit/sin struggle": "Confession, grace, repentance, and embodied resistance to sin"
 };
 
 const traditionPerspectives = {
@@ -121,6 +137,17 @@ generateButton.addEventListener("click", () => {
 });
 
 clearButton.addEventListener("click", clearSession);
+followUpClearButton.addEventListener("click", clearSession);
+
+result.addEventListener("click", (event) => {
+  if (event.target.id === "print-button") {
+    window.print();
+  }
+
+  if (event.target.id === "result-clear-button") {
+    clearSession();
+  }
+});
 
 function collectInitialInputs() {
   const tradition = document.querySelector("#tradition").value;
@@ -173,16 +200,17 @@ function renderCrisisMessage() {
     <div class="result-header">
       <h2>This needs immediate human support</h2>
       <p>Shepherd cannot handle emergencies or crisis situations, and it should not be used as a substitute for urgent help.</p>
+      <div class="result-actions">
+        <button type="button" id="result-clear-button" class="secondary">Clear Everything</button>
+      </div>
     </div>
-    <section class="result-section">
-      <h3>Please reach out now</h3>
+    ${section("Please reach out now", "Caution / safety boundary", `
       <p>If there is immediate danger, call emergency services right now. In the United States, call or text 988 for the Suicide & Crisis Lifeline if self-harm, suicide, or severe crisis may be involved.</p>
       <p>Contact a trusted person, pastor or priest, counselor, doctor, local crisis line, or appropriate professional. If abuse or violence is involved, seek safety first and contact local emergency or abuse-support services.</p>
-    </section>
-    <section class="result-section">
-      <h3>A grounding step</h3>
+    `)}
+    ${section("A grounding step", "Pastoral wisdom", `
       <p>Move near another safe person if possible, reduce access to anything that could be used for harm, and say plainly: "I need help right now."</p>
-    </section>
+    `)}
   `;
   result.classList.remove("hidden");
   result.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -193,6 +221,8 @@ function renderPlan(data) {
   const scripture = scriptureByFocus[data.focus] || scriptureByFocus.Prayer;
   const voice = `${voiceProfiles[data.tone]}; ${roleProfiles[data.role]}`;
   const summary = buildSummary(data);
+  const humanStep = buildHumanStep(data);
+  const reasoning = buildReasoningPath(data, themes, humanStep);
 
   followUpPanel.classList.add("hidden");
   result.className = "result";
@@ -201,15 +231,21 @@ function renderPlan(data) {
       <h2>Your pastoral reflection draft</h2>
       <p>This is a mock, static reflection generated in browser memory. It is preparation for prayer, discernment, and human pastoral care.</p>
       <p class="fine-print">Voice setting: ${escapeHtml(data.tone)} tone through a ${escapeHtml(data.role)} lens. This changes wording and emphasis only; Shepherd is not claiming to be clergy, a counselor, or an authority figure.</p>
+      <div class="result-actions">
+        <button type="button" id="print-button" class="primary">Print / Save as PDF</button>
+        <button type="button" id="result-clear-button" class="secondary">Clear Everything</button>
+      </div>
     </div>
-    ${section("Situation Summary", `<p>${summary}</p>`)}
-    ${section("Key Themes", list(themes))}
-    ${section("Scripture Passages with Context", scriptureList(scripture))}
-    ${section("Denominational Perspective", `<p>${escapeHtml(traditionPerspectives[data.tradition])}</p><p>This is a summary of a tradition's common emphases, not a universal declaration for every church or believer in that tradition.</p>`)}
-    ${section("Reflection Questions", list(buildQuestions(data)))}
-    ${section("Optional Suggested Prayer", `<p>${buildPrayer(data, voice)}</p>`)}
-    ${section("7-Day Pastoral Care Plan", orderedList(buildCarePlan(data)))}
-    ${section("Recommended Human Next Step", `<p>${buildHumanStep(data)}</p>`)}
+    ${section("Situation Summary", "User-provided reflection", `<p>${summary}</p>`)}
+    ${section("Key Themes", "Pastoral wisdom", list(themes))}
+    ${section("Reasoning Path", "Pastoral wisdom", reasoningPath(reasoning))}
+    ${section("Scripture with Context", "Scripture", scriptureList(scripture))}
+    ${section("Christian Tradition Perspective", "Christian tradition summary", `<p>${escapeHtml(traditionPerspectives[data.tradition])}</p><p>This is a summary of a tradition's common emphases, not a universal declaration for every church or believer in that tradition.</p>`)}
+    ${section("Reflection Questions", "Pastoral wisdom", list(buildQuestions(data)))}
+    ${section("Suggested Prayer", "Pastoral wisdom", `<p>${buildPrayer(data, voice)}</p>`)}
+    ${section("7-Day Pastoral Care Plan", "Pastoral wisdom", orderedList(buildCarePlan(data)))}
+    ${section("Recommended Human Next Step", "Pastoral wisdom", `<p>${humanStep}</p>`)}
+    ${section("Boundaries and Cautions", "Caution / safety boundary", list(buildBoundaries()))}
   `;
   result.classList.remove("hidden");
   result.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -240,6 +276,26 @@ function buildQuestions(data) {
     "Where might Scripture comfort you, and where might it challenge you toward a concrete act of faith?",
     "Who is one mature Christian or appropriate professional you could invite into this with humility and care?",
     `How might your ${data.tradition} background shape the practices you choose this week?`
+  ];
+}
+
+function buildReasoningPath(data, themes, humanStep) {
+  return [
+    ["Concern named", shortenPlain(data.concern)],
+    ["Themes detected", themes.join("; ")],
+    ["Why these themes matter", "These themes help separate what the user described from the pastoral questions that may need prayer, Scripture, wise counsel, and practical next steps."],
+    ["Scripture category selected", scriptureCategoryByFocus[data.focus] || scriptureCategoryByFocus.Prayer],
+    ["Human next step recommended", humanStep],
+    ["Confidence note", "This is a structured pastoral preparation draft based on limited user-provided information and static mock logic. It is not final authority, diagnosis, prophecy, counseling, or a substitute for human pastoral care."]
+  ];
+}
+
+function buildBoundaries() {
+  return [
+    "Shepherd is a preparation and reflection tool, not a pastor, priest, counselor, doctor, emergency service, or final authority.",
+    "The response is generated from static mock logic and user-provided reflection, not from an AI model or a human review.",
+    "Where safety, abuse, severe depression, violence, self-harm, medical concerns, or legal questions may be involved, seek immediate help from appropriate people or professionals.",
+    "Print / Save as PDF uses the browser print dialog only. Shepherd does not save, transmit, or store the reflection."
   ];
 }
 
@@ -281,8 +337,16 @@ function scriptureList(items) {
   `).join("")}</div>`;
 }
 
-function section(title, content) {
-  return `<section class="result-section"><h3>${title}</h3>${content}</section>`;
+function section(title, evidence, content) {
+  return `
+    <section class="result-section">
+      <div class="section-heading">
+        <h3>${title}</h3>
+        <span class="evidence-label">${evidence}</span>
+      </div>
+      ${content}
+    </section>
+  `;
 }
 
 function list(items) {
@@ -293,8 +357,22 @@ function orderedList(items) {
   return `<ol>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ol>`;
 }
 
+function reasoningPath(items) {
+  return `<div class="reasoning-grid">${items.map(([label, detail]) => `
+    <div class="reasoning-item">
+      <strong>${escapeHtml(label)}</strong>
+      <span>${escapeHtml(detail)}</span>
+    </div>
+  `).join("")}</div>`;
+}
+
 function shorten(text) {
   const clean = escapeHtml(text.trim());
+  return clean.length > 240 ? `${clean.slice(0, 237)}...` : clean;
+}
+
+function shortenPlain(text) {
+  const clean = text.trim();
   return clean.length > 240 ? `${clean.slice(0, 237)}...` : clean;
 }
 
