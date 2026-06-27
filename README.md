@@ -58,6 +58,27 @@ The Understanding Engine runs before the discernment/correction layer, before Di
 
 This object helps Shepherd understand meaning, emotions, assumptions, deeper needs, biblical themes, pastoral strategy, and the Father / Son-Logos / Holy Spirit entry point before producing the final pastoral response. The full object is internal and is not shown to normal users.
 
+## Shepherd Discernment Engine
+
+Version 4 adds a second internal reasoning stage:
+
+```js
+analyzeDiscernment(userText, selectedVoice, understanding)
+```
+
+The Understanding Engine observes what the user appears to be saying. The Discernment Engine evaluates what needs to be affirmed, corrected, warned about, or developed. It returns a transient structured object with:
+
+- `truthsRecognized`
+- `possibleErrors`
+- `missingBiblicalIdeas`
+- `spiritualRisks`
+- `growthOpportunities`
+- `correctionTone`
+- `pastoralPriority`
+- `confidence`
+
+This object helps Shepherd distinguish the suffering person from a possibly false belief or harmful spiritual direction. It is used internally by the Divine Pattern layer and visible response builders, but normal users do not see the raw object.
+
 ## Discernment Engine
 
 Version 2 includes a static rule-based function:
@@ -88,6 +109,7 @@ The current in-browser flow is:
 ```text
 User input
 -> transient Shepherd Understanding Engine
+-> transient Shepherd Discernment Engine
 -> transient discernment / correction analysis
 -> transient Divine Pattern analysis
 -> selected Shepherd voice or perspective lens
@@ -187,7 +209,7 @@ All analysis is transient and in memory while the page is open.
 
 Open `index.html` in a browser. No build step is required.
 
-Developer debug mode is available by adding `?debug` or `#debug` to the page URL. In that mode, Shepherd writes the internal Understanding Engine object, discernment analysis, and Divine Pattern analysis to the browser console for testing. Normal users do not see these objects in the page.
+Developer debug mode is available by adding `?debug` or `#debug` to the page URL. In that mode, Shepherd writes the internal Understanding Engine object, Discernment Engine object, legacy correction analysis, and Divine Pattern analysis to the browser console for testing. Normal users do not see these objects in the page.
 
 ## Project Structure
 
@@ -196,6 +218,7 @@ Shepherd/
   index.html
   styles.css
   understandingEngine.js
+  discernmentEngine.js
   app.js
   divine-pattern-engine.js
   README.md
@@ -205,8 +228,9 @@ Shepherd/
 
 - `divine-pattern-engine.js` is dependency-free.
 - `understandingEngine.js` is dependency-free and must load before `app.js`.
+- `discernmentEngine.js` is dependency-free and must load after `understandingEngine.js` and before `app.js`.
 - Divine Pattern analysis is performed in memory only.
-- The Divine Pattern engine receives the Understanding Engine object as context and records its `divinePatternEntry` internally.
+- The Divine Pattern engine receives the Understanding Engine and Discernment Engine objects as context and records their entries internally.
 - The UI displays only a short pastoral summary, not the raw analysis object.
 - Shepherd loads the Divine Pattern engine locally before `app.js`; it does not add a backend, API call, analytics call, database, or storage layer.
 - Divine remains separate from Shepherd.

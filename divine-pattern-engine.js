@@ -158,7 +158,7 @@ const PASTORAL_RISK_TERMS = [
 function analyzeDivinePattern(inputText, options = {}) {
   const text = normalizeInput(inputText);
   const optionScope = normalizeOptions(options);
-  const scoredPatterns = scorePatterns(text, optionScope.understanding);
+  const scoredPatterns = scorePatterns(text, optionScope.understanding, optionScope.discernment);
   const primaryPattern = scoredPatterns[0] || buildFallbackPattern();
   const warnings = detectWarnings(text, primaryPattern);
   const pastoralRisk = assessPastoralRisk(text, warnings);
@@ -176,6 +176,14 @@ function analyzeDivinePattern(inputText, options = {}) {
     creationFallRedemptionConsummation: primaryPattern.cfrc,
     understandingEntry: optionScope.understanding
       ? optionScope.understanding.divinePatternEntry
+      : null,
+    discernmentEntry: optionScope.discernment
+      ? {
+          correctionTone: optionScope.discernment.correctionTone,
+          pastoralPriority: optionScope.discernment.pastoralPriority,
+          spiritualRisks: optionScope.discernment.spiritualRisks,
+          missingBiblicalIdeas: optionScope.discernment.missingBiblicalIdeas
+        }
       : null,
     distortionWarnings: warnings,
     pastoralRisk,
@@ -212,28 +220,48 @@ function normalizeOptions(options) {
       ? options.understanding
       : options.shepherdContext && typeof options.shepherdContext.understanding === "object"
         ? options.shepherdContext.understanding
+        : null,
+    discernment: options.discernment && typeof options.discernment === "object"
+      ? options.discernment
+      : options.shepherdContext && typeof options.shepherdContext.discernment === "object"
+        ? options.shepherdContext.discernment
         : null
   };
 }
 
-function scorePatterns(text, understanding) {
+function scorePatterns(text, understanding, discernment) {
   const understandingTerms = buildUnderstandingTerms(understanding);
+  const discernmentTerms = buildDiscernmentTerms(discernment);
 
   return PATTERN_SIGNALS
     .map((pattern) => {
       const matchedSignals = pattern.keywords.filter((keyword) =>
-        text.includes(keyword) || understandingTerms.includes(keyword)
+        text.includes(keyword) || understandingTerms.includes(keyword) || discernmentTerms.includes(keyword)
       );
       const understandingBoost = scoreUnderstandingBoost(pattern, understanding);
+      const discernmentBoost = scoreDiscernmentBoost(pattern, discernment);
 
       return {
         ...pattern,
         matchedSignals,
-        score: matchedSignals.length + understandingBoost
+        score: matchedSignals.length + understandingBoost + discernmentBoost
       };
     })
     .filter((pattern) => pattern.score > 0)
     .sort((a, b) => b.score - a.score);
+}
+
+function buildDiscernmentTerms(discernment) {
+  if (!discernment) {
+    return [];
+  }
+
+  return [
+    ...(discernment.missingBiblicalIdeas || []),
+    ...(discernment.spiritualRisks || []),
+    ...(discernment.growthOpportunities || []),
+    ...(discernment.pastoralPriority || [])
+  ].map((term) => String(term).toLowerCase());
 }
 
 function buildUnderstandingTerms(understanding) {
@@ -271,6 +299,35 @@ function scoreUnderstandingBoost(pattern, understanding) {
     boost += 1;
   }
   if (themes.includes("suffering") && pattern.id === "lament_to_trust") {
+    boost += 1;
+  }
+
+  return boost;
+}
+
+function scoreDiscernmentBoost(pattern, discernment) {
+  if (!discernment) {
+    return 0;
+  }
+
+  const ideas = (discernment.missingBiblicalIdeas || []).join(" ").toLowerCase();
+  const risks = (discernment.spiritualRisks || []).join(" ").toLowerCase();
+  const priorities = (discernment.pastoralPriority || []).join(" ").toLowerCase();
+  let boost = 0;
+
+  if ((ideas.includes("lament") || priorities.includes("comfort")) && pattern.id === "lament_to_trust") {
+    boost += 1;
+  }
+  if ((ideas.includes("forgiveness") || priorities.includes("repentance")) && pattern.id === "conviction_to_mercy") {
+    boost += 1;
+  }
+  if ((risks.includes("unsafe") || priorities.includes("human support")) && pattern.id === "harm_to_protection") {
+    boost += 1;
+  }
+  if (risks.includes("isolation") && pattern.id === "isolation_to_communion") {
+    boost += 1;
+  }
+  if (risks.includes("fear") && pattern.id === "fear_to_wise_trust") {
     boost += 1;
   }
 

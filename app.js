@@ -2,6 +2,7 @@ const form = document.querySelector("#reflection-form");
 const result = document.querySelector("#result");
 const clearButton = document.querySelector("#clear-button");
 const { analyzeUnderstanding } = window.ShepherdUnderstandingEngine;
+const { analyzeDiscernment } = window.ShepherdDiscernmentEngine;
 const { analyzeDivinePattern } = window.ShepherdDivinePatternEngine;
 
 // Privacy model:
@@ -378,23 +379,26 @@ form.addEventListener("submit", (event) => {
     tradition: sessionDraft.tradition,
     selectedVoice: sessionDraft.voice
   });
-  const analysis = analyzeConcern(sessionDraft.concern, understanding);
   const selectedVoice = sessionDraft.voice;
+  const discernment = analyzeDiscernment(sessionDraft.concern, selectedVoice, understanding);
+  const analysis = analyzeConcern(sessionDraft.concern, understanding, discernment);
   const shepherdContext = {
     tradition: sessionDraft.tradition,
     selectedVoice,
     understanding,
+    discernment,
     concernAnalysis: analysis
   };
   const divinePatternAnalysis = analyzeDivinePattern(sessionDraft.concern, {
     selectedVoice,
     shepherdContext,
-    understanding
+    understanding,
+    discernment
   });
 
-  logDeveloperDebug({ understanding, analysis, divinePatternAnalysis });
-  lastResponse = { data: sessionDraft, understanding, analysis, divinePatternAnalysis };
-  renderPlan(sessionDraft, understanding, analysis, divinePatternAnalysis);
+  logDeveloperDebug({ understanding, discernment, analysis, divinePatternAnalysis });
+  lastResponse = { data: sessionDraft, understanding, discernment, analysis, divinePatternAnalysis };
+  renderPlan(sessionDraft, understanding, discernment, analysis, divinePatternAnalysis);
 });
 
 clearButton.addEventListener("click", clearSession);
@@ -409,7 +413,7 @@ result.addEventListener("click", (event) => {
   }
 
   if (event.target.id === "compare-button" && lastResponse) {
-    renderVoiceComparison(lastResponse.data, lastResponse.understanding, lastResponse.analysis);
+    renderVoiceComparison(lastResponse.data, lastResponse.understanding, lastResponse.discernment, lastResponse.analysis);
   }
 });
 
@@ -426,7 +430,7 @@ function containsCrisisLanguage(text) {
   return crisisTerms.some((term) => normalized.includes(term));
 }
 
-function analyzeConcern(userText, understanding = null) {
+function analyzeConcern(userText, understanding = null, discernment = null) {
   const lower = userText.toLowerCase();
   const matches = concernSignals
     .map((signal) => ({
@@ -469,6 +473,7 @@ function analyzeConcern(userText, understanding = null) {
     ...primary.responseTypes,
     ...theological.flatMap((item) => item.responseTypes),
     ...(understanding ? mapStrategiesToResponseTypes(understanding.pastoralStrategy) : []),
+    ...(discernment ? mapDiscernmentPrioritiesToResponseTypes(discernment) : []),
     ...(cognitive.some((item) => ["all_or_nothing", "fear_led"].includes(item.id)) ? ["correction"] : []),
     ...(medicalOrMentalHealth ? ["counsel", "practical"] : [])
   ];
@@ -497,6 +502,38 @@ function analyzeConcern(userText, understanding = null) {
     medicalOrMentalHealth,
     hasHarmLanguage: primary.focus === "harm" || lower.includes("abuse") || lower.includes("unsafe")
   };
+}
+
+function mapDiscernmentPrioritiesToResponseTypes(discernment = {}) {
+  const priorities = (discernment.pastoralPriority || []).join(" ").toLowerCase();
+  const mapped = [];
+
+  if (priorities.includes("comfort")) {
+    mapped.push("comfort");
+  }
+  if (priorities.includes("correction")) {
+    mapped.push("correction");
+  }
+  if (priorities.includes("encouragement")) {
+    mapped.push("encouragement");
+  }
+  if (priorities.includes("warning")) {
+    mapped.push("warning");
+  }
+  if (priorities.includes("teaching")) {
+    mapped.push("counsel");
+  }
+  if (priorities.includes("repentance")) {
+    mapped.push("repentance");
+  }
+  if (priorities.includes("practical")) {
+    mapped.push("practical");
+  }
+  if (priorities.includes("human support")) {
+    mapped.push("counsel", "practical");
+  }
+
+  return mapped;
 }
 
 function mapStrategiesToResponseTypes(pastoralStrategy = {}) {
@@ -574,12 +611,13 @@ function logDeveloperDebug(payload) {
 
   console.group("Shepherd developer debug");
   console.log("Understanding object", payload.understanding);
+  console.log("Discernment object", payload.discernment);
   console.log("Discernment / correction analysis", payload.analysis);
   console.log("Divine Pattern analysis", payload.divinePatternAnalysis);
   console.groupEnd();
 }
 
-function renderPlan(data, understanding, analysis, divinePatternAnalysis) {
+function renderPlan(data, understanding, discernment, analysis, divinePatternAnalysis) {
   const voice = voiceProfiles[data.voice] || voiceProfiles["Shepherd"];
   const scriptures = buildScriptureSelection(analysis);
   const nextStep = buildHumanNextStep(analysis);
@@ -598,13 +636,13 @@ function renderPlan(data, understanding, analysis, divinePatternAnalysis) {
         <button type="button" id="result-clear-button" class="secondary">Clear Everything</button>
       </div>
     </div>
-    ${section("Pastoral Reading", "Pastoral wisdom", buildPastoralReading(data, understanding, analysis, voice))}
+    ${section("Pastoral Reading", "Pastoral wisdom", buildPastoralReading(data, understanding, discernment, analysis, voice))}
     ${section("Divine Pattern Layer", "Pastoral pattern summary", buildDivinePatternLayer(divinePatternAnalysis))}
     ${analysis.possibleTheologicalDistortions.length ? section("Gentle Correction", "Scripture and pastoral wisdom", correctionBlock(analysis, voice)) : ""}
     ${section("Scripture with Context", "Scripture", scriptureList(scriptures))}
-    ${section("Things You May Not Have Considered", "Discernment considerations", list(buildConsiderations(analysis, understanding)))}
+    ${section("Things You May Not Have Considered", "Discernment considerations", list(buildConsiderations(analysis, understanding, discernment)))}
     ${section("Christian Tradition Perspective", "Christian tradition summary", `<p>${escapeHtml(traditionPerspectives[data.tradition])}</p>`)}
-    ${section("Suggested Prayer", "Pastoral wisdom", `<p>${escapeHtml(buildPrayer(data, understanding, analysis, voice))}</p>`)}
+    ${section("Suggested Prayer", "Pastoral wisdom", `<p>${escapeHtml(buildPrayer(data, understanding, discernment, analysis, voice))}</p>`)}
     ${section("Recommended Human Next Step", "Caution / safety boundary", `<p>${escapeHtml(nextStep)}</p>`)}
     ${section("Boundaries and Cautions", "Caution / safety boundary", list(buildBoundaries(analysis)))}
   `;
@@ -656,7 +694,7 @@ function formatDivinePatternSummary(summaryForShepherd) {
   return "a call to hold truth, mercy, Scripture, and wise human counsel together";
 }
 
-function buildPastoralReading(data, understanding, analysis, voice) {
+function buildPastoralReading(data, understanding, discernment, analysis, voice) {
   const responseText = analysis.responseTypes.map((type) => responseTypeLabels[type] || type).join(", ");
   const emotionText = analysis.likelyEmotions.length
     ? `Shepherd hears ${joinHumanList(analysis.likelyEmotions)} in what you wrote.`
@@ -672,13 +710,19 @@ function buildPastoralReading(data, understanding, analysis, voice) {
     understanding.pastoralStrategy.primary,
     ...understanding.pastoralStrategy.supporting
   ].filter(Boolean).join(", ");
+  const priorityText = discernment.pastoralPriority.length
+    ? joinHumanList(discernment.pastoralPriority)
+    : "prayerful reflection and a practical next step";
+  const correctionText = discernment.correctionTone === "none"
+    ? "No direct correction is clear from the wording, so Shepherd should stay humble."
+    : `The correction tone should be ${discernment.correctionTone}, aimed at the belief or direction rather than condemnation of the person.`;
 
   return `
     <p>${escapeHtml(meaningText)} ${escapeHtml(emotionText)} ${escapeHtml(needText)}</p>
     <p>The likely spiritual or pastoral issue is ${escapeHtml(analysis.possibleSpiritualIssue)}. ${escapeHtml(overlapText)}</p>
     <p>${escapeHtml(voiceProfiles["Shepherd"].comfort)} ${escapeHtml(voiceProfiles["Shepherd"].challenge)}</p>
     ${data.voice === "Shepherd" ? "" : `<p>${escapeHtml(buildPerspectiveLine(data.voice, voice))}</p>`}
-    <p>The response seems to call for ${escapeHtml(responseText)} rather than simple affirmation. In pastoral strategy terms: ${escapeHtml(strategyText)}. Shepherd should help you test what is true, receive what is merciful, and take one faithful human next step.</p>
+    <p>The response seems to call for ${escapeHtml(responseText)} rather than simple affirmation. In pastoral strategy terms: ${escapeHtml(strategyText)}. Discernment should prioritize ${escapeHtml(priorityText)}. ${escapeHtml(correctionText)}</p>
   `;
 }
 
@@ -709,12 +753,24 @@ function buildScriptureSelection(analysis) {
   return [...theologicalScriptures, ...base].slice(0, 3);
 }
 
-function buildConsiderations(analysis, understanding = null) {
+function buildConsiderations(analysis, understanding = null, discernment = null) {
   const considerations = [];
 
   if (understanding) {
     understanding.assumptionsDetected.forEach((assumption) => {
       considerations.push(`${assumption.statement} ${assumption.pastoralNote}`);
+    });
+  }
+
+  if (discernment) {
+    discernment.possibleErrors.forEach((error) => {
+      considerations.push(error);
+    });
+    discernment.missingBiblicalIdeas.slice(0, 3).forEach((idea) => {
+      considerations.push(`A biblical idea to bring back into view is ${idea}.`);
+    });
+    discernment.spiritualRisks.slice(0, 2).forEach((risk) => {
+      considerations.push(`A spiritual risk to watch is ${risk}.`);
     });
   }
 
@@ -795,13 +851,14 @@ function buildConsiderations(analysis, understanding = null) {
   return unique(considerations).slice(0, 5);
 }
 
-function buildPrayer(data, understanding, analysis, voice) {
+function buildPrayer(data, understanding, discernment, analysis, voice) {
   const lensRequest = data.voice === "Shepherd"
     ? "Give me truth and mercy"
     : `Let this ${data.voice} perspective serve truth and mercy`;
   const need = understanding.deeperNeeds[0] || analysis.possibleSpiritualIssue;
+  const growth = discernment.growthOpportunities[0] || "one faithful next step";
 
-  return `Lord Jesus, meet me with truth and mercy. Help me name ${analysis.possibleSpiritualIssue} without panic or self-deception, and give me ${need}. ${lensRequest}, Scripture held in context, and courage to seek wise human help. Amen.`;
+  return `Lord Jesus, meet me with truth and mercy. Help me name ${analysis.possibleSpiritualIssue} without panic or self-deception, give me ${need}, and lead me toward ${growth}. ${lensRequest}, Scripture held in context, and courage to seek wise human help. Amen.`;
 }
 
 function buildHumanNextStep(analysis) {
@@ -832,7 +889,7 @@ function buildHumanNextStep(analysis) {
   return "Share a brief, honest version of this with one trusted pastor, priest, mature Christian, counselor, doctor, mentor, or wise friend this week.";
 }
 
-function renderVoiceComparison(data, understanding, analysis) {
+function renderVoiceComparison(data, understanding, discernment, analysis) {
   const selected = ["Paul", "Augustine", "Bonhoeffer"].includes(data.voice)
     ? ["Spurgeon", "C.S. Lewis", "Thoughtful pastor"]
     : ["Paul", "Augustine", "Bonhoeffer"];
@@ -859,10 +916,21 @@ function renderVoiceComparison(data, understanding, analysis) {
         <div class="compare-grid">${comparisons}</div>
         <p><strong>Where they agree:</strong> ${escapeHtml(buildAgreementLine(analysis))}</p>
         <p><strong>What Shepherd understood first:</strong> ${escapeHtml(understanding.userMeaning.summary)}</p>
+        <p><strong>What Shepherd discerned:</strong> ${escapeHtml(buildDiscernmentSummary(discernment))}</p>
         <p><strong>Where they differ:</strong> They would place different weight on assurance, desire, moral clarity, costly obedience, tenderness, or practical counsel.</p>
       </div>
     `
   ));
+}
+
+function buildDiscernmentSummary(discernment) {
+  const truths = discernment.truthsRecognized[0] || "There is something honest to acknowledge.";
+  const errors = discernment.possibleErrors[0] || "No strong error is clear from the wording alone.";
+  const priorities = discernment.pastoralPriority.length
+    ? joinHumanList(discernment.pastoralPriority)
+    : "humble counsel";
+
+  return `${truths} Shepherd should evaluate this possible direction: ${errors} The pastoral priority is ${priorities}.`;
 }
 
 function buildAgreementLine(analysis) {
