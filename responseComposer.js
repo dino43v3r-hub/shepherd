@@ -12,6 +12,7 @@ function composeShepherdResponse({
   understanding,
   discernment,
   divinePattern,
+  ruleOfLife,
   concernAnalysis
 }) {
   const voiceName = selectedVoice || "Shepherd";
@@ -35,8 +36,9 @@ function composeShepherdResponse({
     // with short points drawn from understanding, discernment, and pattern data.
     thingsNotConsidered: buildThingsNotConsidered(understanding, discernment, divinePattern),
 
-    // Practical Next Step gives one concrete action aligned to pastoral priority.
-    practicalNextStep: buildPracticalNextStep(discernment, concernAnalysis),
+    // Rule of Life turns discernment into one realistic formation practice for
+    // the coming week rather than adding more advice.
+    ruleOfLifeText: buildRuleOfLifeText(ruleOfLife, voiceName),
 
     // Short Prayer ends the visible response with a simple Anglican/scriptural
     // prayer grounded in the user's need.
@@ -48,6 +50,7 @@ function composeShepherdResponse({
       voiceName,
       correctionTone: discernment.correctionTone,
       pastoralPriority: discernment.pastoralPriority,
+      ruleOfLifeTitle: ruleOfLife ? ruleOfLife.title : "",
       safetyConcern: hasSafetyConcern(discernment, divinePattern),
       sourceLength: typeof userMessage === "string" ? userMessage.length : 0
     }
@@ -127,27 +130,24 @@ function buildThingsNotConsidered(understanding, discernment, divinePattern) {
   return unique(items.map(cleanInternalSubject)).slice(0, 3);
 }
 
-function buildPracticalNextStep(discernment, concernAnalysis) {
-  const priorities = (discernment.pastoralPriority || []).join(" ").toLowerCase();
-  const risks = (discernment.spiritualRisks || []).join(" ").toLowerCase();
-
-  if (risks.includes("unsafe") || risks.includes("despair") || risks.includes("isolation")) {
-    return "Tell one safe, mature person today what you wrote here: a pastor or priest, counselor, doctor, trusted Christian friend, or crisis support if you may be unsafe.";
-  }
-  if (priorities.includes("repentance") || priorities.includes("forgiveness")) {
-    return "Pray for willingness before you pray for warm feelings, then choose one concrete act of obedience that does not deny the hurt or remove wise boundaries.";
-  }
-  if (priorities.includes("correction")) {
-    return "Before asking God to act against the other person, write one sentence of lament and one sentence entrusting justice to God without revenge.";
-  }
-  if (priorities.includes("teaching")) {
-    return "Bring this exact concern to Scripture and to a pastor or mature Christian, asking them to help you separate suffering, discipline, mercy, and fear.";
-  }
-  if (concernAnalysis && concernAnalysis.medicalOrMentalHealth) {
-    return "Make an appointment or send a message to a qualified professional, and ask a trusted Christian to walk with you spiritually while you do.";
+function buildRuleOfLifeText(ruleOfLife, voiceName) {
+  if (!ruleOfLife) {
+    return "For this week, keep the practice small: pray honestly each day, name one faithful next step, and bring it to one wise Christian who can listen with you.";
   }
 
-  return "Take one small faithful step today: pray honestly, name the concern plainly, and bring it to one wise Christian who can listen with you.";
+  const practice = sentenceList(ruleOfLife.dailyPractice || []);
+  const scripture = (ruleOfLife.scriptureFocus || []).length
+    ? ` Let ${joinHumanList(ruleOfLife.scriptureFocus)} be the Scripture held in the background.`
+    : "";
+  const community = ruleOfLife.communityAction
+    ? ` ${ruleOfLife.communityAction}`
+    : "";
+  const caution = ruleOfLife.caution
+    ? ` Hold this caution with it: ${ruleOfLife.caution}`
+    : "";
+  const voice = buildRuleVoiceLine(ruleOfLife, voiceName);
+
+  return `${ruleOfLife.title}: ${ruleOfLife.explanation} For ${ruleOfLife.duration}, try this: ${practice}.${scripture} ${voice}${community}${caution}`;
 }
 
 function buildShortPrayer(understanding, discernment) {
@@ -188,7 +188,7 @@ function buildSections(response) {
     { heading: "One truth worth holding onto", content: response.truthCorrection },
     { heading: "A biblical perspective", content: response.divinePatternInsight },
     { heading: "Things You May Not Have Considered", items: response.thingsNotConsidered },
-    { heading: "One practical next step", content: response.practicalNextStep },
+    { heading: "A Rule of Life for This Week", content: response.ruleOfLifeText },
     { heading: "Let us pray", content: response.shortPrayer }
   ];
 }
@@ -359,6 +359,45 @@ function joinHumanList(items) {
     return `${cleanItems[0]} and ${cleanItems[1]}`;
   }
   return `${cleanItems.slice(0, -1).join(", ")}, and ${cleanItems[cleanItems.length - 1]}`;
+}
+
+function sentenceList(items) {
+  const cleanItems = unique(items).map((item) => String(item).replace(/\.$/, ""));
+
+  if (!cleanItems.length) {
+    return "keep one simple practice before God each day";
+  }
+  if (cleanItems.length === 1) {
+    return cleanItems[0];
+  }
+
+  return `${cleanItems.slice(0, -1).join("; ")}; and ${cleanItems[cleanItems.length - 1]}`;
+}
+
+function buildRuleVoiceLine(ruleOfLife, voiceName) {
+  if (voiceName === "Augustine") {
+    return "Treat this as a way of reordering love, not as a way to earn peace.";
+  }
+  if (voiceName === "C.S. Lewis") {
+    return "Let the practice also train your imagination, so the truest picture of God becomes clearer than the loudest fear.";
+  }
+  if (voiceName === "Bonhoeffer") {
+    return "Let it become concrete obedience: small, truthful, and done in the real conditions of your life.";
+  }
+  if (voiceName === "Spurgeon") {
+    return "Receive it gently; it is meant to bring the weary soul toward Christ, not to add another burden.";
+  }
+  if (voiceName === "Paul") {
+    return "Hold it as grace taking form in ordinary obedience within the body of Christ.";
+  }
+  if (voiceName === "Trusted Christian friend") {
+    return "Keep it simple enough that you can actually do it, and let one trustworthy person know you are trying.";
+  }
+  if (voiceName === "Thoughtful pastor") {
+    return "Let it stay modest, accountable, and free from pressure.";
+  }
+
+  return ruleOfLife.voiceNote || "Hold the practice with Scripture, prayer, and wise counsel rather than pressure.";
 }
 
 function unique(items) {

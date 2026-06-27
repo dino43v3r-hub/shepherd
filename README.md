@@ -81,22 +81,43 @@ This object helps Shepherd distinguish the suffering person from a possibly fals
 
 ## Shepherd Response Composer
 
-Version 5 adds the final structured response stage:
+Version 5 adds the final conversational response stage:
 
 ```js
-composeShepherdResponse({ userMessage, selectedVoice, voiceProfile, understanding, discernment, divinePattern, concernAnalysis })
+composeShepherdResponse({ userMessage, selectedVoice, voiceProfile, understanding, discernment, divinePattern, ruleOfLife, concernAnalysis })
 ```
 
-The Response Composer receives the Understanding Engine, Discernment Engine, Divine Pattern Engine, and selected voice context, then produces the six visible pastoral sections:
+The Response Composer receives the Understanding Engine, Discernment Engine, Divine Pattern Engine, Rule of Life Engine, and selected voice context, then produces the visible pastoral conversation:
 
 - Pastoral Acknowledgment
 - Truth / Correction
 - Divine Pattern Insight
 - Things You May Not Have Considered
-- Practical Next Step
+- A Rule of Life for This Week
 - Short Prayer
 
 The composer keeps the final response consistent across voices while preserving the selected voice as a perspective lens. It does not expose raw internal JSON to normal users.
+
+## Shepherd Rule of Life Engine
+
+Version 6 adds a final internal formation stage:
+
+```js
+buildRuleOfLife({ userMessage, understanding, discernment, divinePattern, selectedVoice })
+```
+
+The Rule of Life Engine translates the current discernment into one small spiritual practice for the coming days. It is not a checklist, legalism, or generic advice. It returns:
+
+- `title`
+- `explanation`
+- `duration`
+- `dailyPractice`
+- `scriptureFocus`
+- `reflectionQuestion`
+- `communityAction`
+- `caution`
+
+When safety, self-harm, abuse, violence, severe depression, or medical concerns may be involved, the Rule of Life points toward immediate human support rather than private spiritual effort.
 
 ## Discernment Engine
 
@@ -131,6 +152,7 @@ User input
 -> transient Shepherd Discernment Engine
 -> transient discernment / correction analysis
 -> transient Divine Pattern analysis
+-> transient Shepherd Rule of Life Engine
 -> selected Shepherd voice or perspective lens
 -> Shepherd Response Composer
 -> final visible response
@@ -180,17 +202,17 @@ Current guide and perspectives:
 
 Each perspective can comfort, challenge, and disagree with the user's conclusion when needed, while Shepherd remains the main guide.
 
-## Dynamic Human Next Steps
+## Rule of Life Practices
 
-The recommended next step changes based on the detected issue:
+The weekly Rule of Life changes based on the detected issue:
 
-- Crisis or unsafe language: immediate human help, emergency support, crisis support, or safety planning
-- Guilt or sin: confession, repentance, repair, accountability, and pastoral counsel
-- Grief: pastor, mature Christian friend, grief support, prayerful community, or counselor
-- Relationship conflict: mediator, pastor, priest, counselor, or mature Christian
-- Theological confusion: pastor, priest, Bible study leader, or spiritual director
-- Loneliness or isolation: one trusted person this week
-- Medical or mental health language: doctor or counselor plus pastoral support
+- Crisis or unsafe language: immediate human help before private practice
+- Shame: receiving grace through a Gospel restoration story
+- Unforgiveness: praying for willingness and placing the person into God's hands
+- Grief: faithful lament with the Psalms
+- Vengeance: lament and entrusting judgment to God
+- Loneliness: one concrete act of communion with the Church
+- Anxiety or fear: slow prayer with Scripture and one truthful sentence before God
 
 ## Additional Faithful Perspectives
 
@@ -229,7 +251,7 @@ All analysis is transient and in memory while the page is open.
 
 Open `index.html` in a browser. No build step is required.
 
-Developer debug mode is available by adding `?debug` or `#debug` to the page URL. In that mode, Shepherd writes the internal Understanding Engine object, Discernment Engine object, legacy correction analysis, Divine Pattern analysis, and composed response structure to the browser console for testing. Normal users do not see these objects in the page.
+Developer debug mode is available by adding `?debug` or `#debug` to the page URL. In that mode, Shepherd writes the internal Understanding Engine object, Discernment Engine object, legacy correction analysis, Divine Pattern analysis, Rule of Life object, and composed response structure to the browser console for testing. Normal users do not see these objects in the page.
 
 ## Project Structure
 
@@ -239,6 +261,7 @@ Shepherd/
   styles.css
   understandingEngine.js
   discernmentEngine.js
+  ruleOfLifeEngine.js
   responseComposer.js
   app.js
   divine-pattern-engine.js
@@ -250,6 +273,7 @@ Shepherd/
 - `divine-pattern-engine.js` is dependency-free.
 - `understandingEngine.js` is dependency-free and must load before `app.js`.
 - `discernmentEngine.js` is dependency-free and must load after `understandingEngine.js` and before `app.js`.
+- `ruleOfLifeEngine.js` is dependency-free and must load after `divine-pattern-engine.js` and before `responseComposer.js`.
 - `responseComposer.js` is dependency-free and must load before `app.js`.
 - Divine Pattern analysis is performed in memory only.
 - The Divine Pattern engine receives the Understanding Engine and Discernment Engine objects as context and records their entries internally.

@@ -4,6 +4,7 @@ const clearButton = document.querySelector("#clear-button");
 const { analyzeUnderstanding } = window.ShepherdUnderstandingEngine;
 const { analyzeDiscernment } = window.ShepherdDiscernmentEngine;
 const { analyzeDivinePattern } = window.ShepherdDivinePatternEngine;
+const { buildRuleOfLife } = window.ShepherdRuleOfLifeEngine;
 const { composeShepherdResponse } = window.ShepherdResponseComposer;
 
 // Privacy model:
@@ -396,6 +397,13 @@ form.addEventListener("submit", (event) => {
     understanding,
     discernment
   });
+  const ruleOfLife = buildRuleOfLife({
+    userMessage: sessionDraft.concern,
+    understanding,
+    discernment,
+    divinePattern: divinePatternAnalysis,
+    selectedVoice
+  });
   const voiceProfile = voiceProfiles[selectedVoice] || voiceProfiles["Shepherd"];
   const composedResponse = composeShepherdResponse({
     userMessage: sessionDraft.concern,
@@ -404,11 +412,12 @@ form.addEventListener("submit", (event) => {
     understanding,
     discernment,
     divinePattern: divinePatternAnalysis,
+    ruleOfLife,
     concernAnalysis: analysis
   });
 
-  logDeveloperDebug({ understanding, discernment, analysis, divinePatternAnalysis, composedResponse });
-  lastResponse = { data: sessionDraft, understanding, discernment, analysis, divinePatternAnalysis, composedResponse };
+  logDeveloperDebug({ understanding, discernment, analysis, divinePatternAnalysis, ruleOfLife, composedResponse });
+  lastResponse = { data: sessionDraft, understanding, discernment, analysis, divinePatternAnalysis, ruleOfLife, composedResponse };
   renderPlan(sessionDraft, composedResponse);
 });
 
@@ -625,6 +634,7 @@ function logDeveloperDebug(payload) {
   console.log("Discernment object", payload.discernment);
   console.log("Discernment / correction analysis", payload.analysis);
   console.log("Divine Pattern analysis", payload.divinePatternAnalysis);
+  console.log("Rule of Life object", payload.ruleOfLife);
   console.log("Composed response structure", payload.composedResponse);
   console.groupEnd();
 }
