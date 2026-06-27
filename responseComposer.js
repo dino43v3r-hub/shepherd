@@ -8,6 +8,7 @@ function composeShepherdResponse({
   userMessage,
   selectedVoice,
   voiceProfile,
+  voiceContext,
   understanding,
   discernment,
   divinePattern,
@@ -16,20 +17,21 @@ function composeShepherdResponse({
 }) {
   const voiceName = selectedVoice || "Shepherd";
   const voice = voiceProfile || {};
+  const guidance = normalizeVoiceContext(voiceContext, voiceName, voice);
   const variant = chooseVariant(userMessage, voiceName);
 
   const response = {
-    openingAcknowledgment: buildOpeningAcknowledgment(understanding, discernment, voiceName, voice, variant),
+    openingAcknowledgment: buildOpeningAcknowledgment(understanding, discernment, voiceName, voice, guidance, variant),
 
-    pastoralInterpretation: buildPastoralInterpretation(understanding, discernment, concernAnalysis, voice, voiceName),
+    pastoralInterpretation: buildPastoralInterpretation(understanding, discernment, concernAnalysis, voice, voiceName, guidance),
 
-    scriptureWoven: buildScriptureWoven(divinePattern, discernment, voiceName),
+    scriptureWoven: buildScriptureWoven(divinePattern, discernment, voiceName, guidance),
 
     thingsNotConsidered: buildThingsNotConsidered(understanding, discernment, divinePattern),
 
     ruleOfLifeText: buildRuleOfLifeText(ruleOfLife, voiceName),
 
-    practiceReason: buildPracticeReason(ruleOfLife, understanding, discernment, divinePattern),
+    practiceReason: buildPracticeReason(ruleOfLife, understanding, discernment, divinePattern, guidance),
 
     shortPrayer: buildShortPrayer(understanding, discernment),
 
@@ -37,6 +39,7 @@ function composeShepherdResponse({
 
     meta: {
       voiceName,
+      voiceKey: guidance.voiceKey,
       correctionTone: discernment.correctionTone,
       pastoralPriority: discernment.pastoralPriority,
       ruleOfLifeTitle: ruleOfLife ? ruleOfLife.title : "",
@@ -51,7 +54,54 @@ function composeShepherdResponse({
   };
 }
 
-function buildOpeningAcknowledgment(understanding, discernment, voiceName, voice, variant) {
+function normalizeVoiceContext(voiceContext, voiceName, voiceProfile) {
+  const fallback = {
+    voiceKey: normalizeVoiceKey(voiceName),
+    voiceName: voiceName || "Shepherd",
+    reasoningLens: voiceProfile && voiceProfile.emphasis ? voiceProfile.emphasis : "",
+    pastoralPriority: [],
+    correctionPosture: "",
+    scriptureEmphasis: [],
+    divinePatternEmphasis: [],
+    ruleOfLifeEmphasis: "",
+    toneGuidance: "",
+    cautions: []
+  };
+
+  if (!voiceContext || typeof voiceContext !== "object") {
+    return fallback;
+  }
+
+  return {
+    ...fallback,
+    ...voiceContext,
+    pastoralPriority: Array.isArray(voiceContext.pastoralPriority) ? voiceContext.pastoralPriority : fallback.pastoralPriority,
+    scriptureEmphasis: Array.isArray(voiceContext.scriptureEmphasis) ? voiceContext.scriptureEmphasis : fallback.scriptureEmphasis,
+    divinePatternEmphasis: Array.isArray(voiceContext.divinePatternEmphasis) ? voiceContext.divinePatternEmphasis : fallback.divinePatternEmphasis,
+    cautions: Array.isArray(voiceContext.cautions) ? voiceContext.cautions : fallback.cautions
+  };
+}
+
+function normalizeVoiceKey(voiceName) {
+  const normalized = String(voiceName || "shepherd")
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  const aliases = {
+    "c-s-lewis": "cs-lewis",
+    "cs-lewis": "cs-lewis",
+    augustine: "augustine",
+    bonhoeffer: "bonhoeffer",
+    "thoughtful-pastor": "anglican-priest",
+    "anglican-priest": "anglican-priest"
+  };
+
+  return aliases[normalized] || normalized || "shepherd";
+}
+
+function buildOpeningAcknowledgment(understanding, discernment, voiceName, voice, guidance, variant) {
   const concern = makeConcernHuman(understanding);
   const opening = [
     `As I read what you shared, I hear that ${concern}`,
@@ -59,11 +109,36 @@ function buildOpeningAcknowledgment(understanding, discernment, voiceName, voice
     `If I am understanding you rightly, ${concern}`
   ][variant];
   const voiceSentence = buildVoiceSentence(voiceName, voice);
+  const voiceOpening = buildVoiceOpeningLine(guidance);
 
-  return `Thank you for saying this plainly. ${opening}. I want to answer gently, without rushing past the ache or treating the strongest feeling as the whole truth. ${voiceSentence}`;
+  return `Thank you for saying this plainly. ${opening}. ${voiceOpening} ${voiceSentence}`;
 }
 
-function buildPastoralInterpretation(understanding, discernment, concernAnalysis, voice, voiceName) {
+function buildVoiceOpeningLine(guidance) {
+  const priority = guidance && guidance.pastoralPriority && guidance.pastoralPriority[0]
+    ? guidance.pastoralPriority[0]
+    : "";
+
+  if (guidance.voiceKey === "cs-lewis") {
+    return "I want to help you test the thought carefully without losing tenderness for the pain beneath it.";
+  }
+  if (guidance.voiceKey === "augustine") {
+    return "I want to listen for the fear, desire, and restless love underneath the surface of the question.";
+  }
+  if (guidance.voiceKey === "bonhoeffer") {
+    return "I want to keep comfort joined to truth, so reflection can become a faithful next act.";
+  }
+  if (guidance.voiceKey === "anglican-priest") {
+    return "I want to hold this prayerfully, with Scripture, the Church, and ordinary faithfulness in view.";
+  }
+  if (priority) {
+    return `I want to answer gently, with ${priority} in view, without treating the strongest feeling as the whole truth.`;
+  }
+
+  return "I want to answer gently, without rushing past the ache or treating the strongest feeling as the whole truth.";
+}
+
+function buildPastoralInterpretation(understanding, discernment, concernAnalysis, voice, voiceName, guidance) {
   const truths = (discernment.truthsRecognized || [])
     .filter((truth) => !String(truth).toLowerCase().includes("selected voice"));
   const affirmation = cleanInternalSubject(truths[1] || truths[0] || "The pain should be acknowledged truthfully.");
@@ -73,23 +148,86 @@ function buildPastoralInterpretation(understanding, discernment, concernAnalysis
     : "There may be more here than one quick answer can carry.";
   const tone = discernment.correctionTone;
   const challenge = voiceCorrectionLine(voiceName, voice);
-  const correctionLead = {
+  const correctionLead = buildCorrectionLead(tone, guidance);
+  const reasoningLine = buildReasoningLine(guidance);
+  const distortion = concernAnalysis && concernAnalysis.possibleTheologicalDistortions && concernAnalysis.possibleTheologicalDistortions[0]
+    ? ` ${cleanInternalSubject(concernAnalysis.possibleTheologicalDistortions[0].correction)}`
+    : "";
+
+  return `${affirmation} ${need} ${reasoningLine} ${correctionLead} ${error}${distortion ? ` ${distortion}` : ""} ${challenge}`;
+}
+
+function buildReasoningLine(guidance) {
+  if (guidance.voiceKey === "cs-lewis") {
+    return "The question is not whether the feeling is real, but whether it is a trustworthy guide to what is ultimately true.";
+  }
+  if (guidance.voiceKey === "augustine") {
+    return "One thing to notice is what this fear or ache is asking your heart to love, protect, or control.";
+  }
+  if (guidance.voiceKey === "bonhoeffer") {
+    return "The question should eventually become concrete: what faithful obedience looks like in the real conditions of your life.";
+  }
+  if (guidance.voiceKey === "anglican-priest") {
+    return "This belongs in prayer, confession where needed, worship, and the wise care of the Church, not only in private analysis.";
+  }
+  if (guidance.reasoningLens) {
+    return `I am holding this through ${lowercaseFirst(String(guidance.reasoningLens).replace(/\.$/, ""))}.`;
+  }
+
+  return "I am trying to hold truth and mercy together here.";
+}
+
+function buildCorrectionLead(tone, guidance) {
+  const posture = guidance && guidance.correctionPosture ? cleanInternalSubject(guidance.correctionPosture) : "";
+
+  if (posture) {
+    return `${posture}`;
+  }
+
+  return {
     none: "I would hold this carefully rather than rush to a conclusion.",
     gentle: "One gentle correction seems important here.",
     firm: "I want to say this plainly, but not harshly.",
     urgent: "This needs immediate human care as well as spiritual care."
   }[tone] || "This needs careful correction.";
-  const distortion = concernAnalysis && concernAnalysis.possibleTheologicalDistortions && concernAnalysis.possibleTheologicalDistortions[0]
-    ? ` ${cleanInternalSubject(concernAnalysis.possibleTheologicalDistortions[0].correction)}`
-    : "";
-
-  return `${affirmation} ${need} ${correctionLead} ${error}${distortion ? ` ${distortion}` : ""} ${challenge}`;
 }
 
-function buildScriptureWoven(divinePattern, discernment, voiceName) {
-  const customInsight = buildCaseScriptureInsight(discernment);
+function buildScriptureLead(voiceName, guidance) {
+  if (guidance.voiceKey === "cs-lewis") {
+    return "Scripture helps test the imagination so the loudest picture of God is not mistaken for the truest one.";
+  }
+  if (guidance.voiceKey === "augustine") {
+    return "Scripture turns the restless heart back toward the God who is both truth and mercy.";
+  }
+  if (guidance.voiceKey === "bonhoeffer") {
+    return "Scripture does not leave grace as an idea; it presses grace toward embodied trust and obedience.";
+  }
+  if (guidance.voiceKey === "anglican-priest") {
+    return "Scripture gives words the Church can pray with you, not just ideas to analyze alone.";
+  }
+  if (voiceName === "Augustine") {
+    return "One thing that stands out to me is that this is also a question of what your heart is being pulled toward.";
+  }
+
+  return "One thing that stands out to me is that Scripture often holds more than one truth together.";
+}
+
+function buildDivinePatternEmphasisLine(guidance) {
+  const emphasis = guidance && guidance.divinePatternEmphasis && guidance.divinePatternEmphasis[0]
+    ? String(guidance.divinePatternEmphasis[0])
+    : "";
+
+  if (!emphasis) {
+    return "";
+  }
+
+  return `That especially brings ${lowercaseFirst(emphasis.replace(/\.$/, ""))} into view.`;
+}
+
+function buildScriptureWoven(divinePattern, discernment, voiceName, guidance) {
+  const customInsight = buildCaseScriptureInsight(discernment, guidance);
   const scripture = divinePattern && divinePattern.scriptureAnchor
-    ? buildScriptureSentence(divinePattern.scriptureAnchor)
+    ? buildScriptureSentence(divinePattern.scriptureAnchor, guidance)
     : "";
 
   if (customInsight) {
@@ -100,11 +238,10 @@ function buildScriptureWoven(divinePattern, discernment, voiceName) {
   const father = lowercaseFirst(stripArticleLead(lens.father || "The Father brings truth, order, reality, and wise boundaries."));
   const son = lowercaseFirst(stripArticleLead(lens.son || "The Son brings meaning, mercy, suffering love, and reconciliation."));
   const spirit = lowercaseFirst(stripArticleLead(lens.spirit || "The Holy Spirit brings comfort, conviction, sanctification, and communion."));
-  const lead = voiceName === "Augustine"
-    ? "One thing that stands out to me is that this is also a question of what your heart is being pulled toward."
-    : "One thing that stands out to me is that Scripture often holds more than one truth together.";
+  const lead = buildScriptureLead(voiceName, guidance);
+  const emphasis = buildDivinePatternEmphasisLine(guidance);
 
-  return `${lead} The Father ${father}; the Son ${son}; and the Holy Spirit ${spirit}.${scripture}`;
+  return `${lead} ${emphasis} The Father ${father}; the Son ${son}; and the Holy Spirit ${spirit}.${scripture}`;
 }
 
 function buildThingsNotConsidered(understanding, discernment, divinePattern) {
@@ -143,7 +280,7 @@ function buildRuleOfLifeText(ruleOfLife, voiceName) {
   return `${ruleOfLife.title}: ${ruleOfLife.explanation} For ${ruleOfLife.duration}, try this: ${practice}.${scripture} ${voice}${community}${caution}`;
 }
 
-function buildPracticeReason(ruleOfLife, understanding, discernment, divinePattern) {
+function buildPracticeReason(ruleOfLife, understanding, discernment, divinePattern, guidance) {
   const priority = discernment && discernment.pastoralPriority && discernment.pastoralPriority[0]
     ? discernment.pastoralPriority[0]
     : "wisdom";
@@ -156,8 +293,11 @@ function buildPracticeReason(ruleOfLife, understanding, discernment, divinePatte
   const title = ruleOfLife && ruleOfLife.title
     ? ` ${ruleOfLife.title} gives that concern somewhere concrete to go this week.`
     : "";
+  const emphasis = guidance && guidance.ruleOfLifeEmphasis
+    ? ` ${cleanInternalSubject(guidance.ruleOfLifeEmphasis)}`
+    : "";
 
-  return `${risk} The main pastoral need I notice is ${need}, with ${priority} close at hand.${title}`;
+  return `${risk} The main pastoral need I notice is ${need}, with ${priority} close at hand.${title}${emphasis}`;
 }
 
 function buildShortPrayer(understanding, discernment) {
@@ -312,21 +452,22 @@ function formatBiblicalIdea(idea) {
   return idea;
 }
 
-function buildCaseScriptureInsight(discernment) {
+function buildCaseScriptureInsight(discernment, guidance) {
   const ideas = (discernment.missingBiblicalIdeas || []).join(" ").toLowerCase();
   const risks = (discernment.spiritualRisks || []).join(" ").toLowerCase();
+  const emphasis = buildScriptureEmphasisLine(guidance);
 
   if (ideas.includes("image of god") || risks.includes("despair")) {
-    return "Scripture begins with the truth that the Father does not treat you as disposable; you are his creature, made with dignity. The Son comes near to the ashamed and weary rather than recoiling from them, and the Holy Spirit restores hope patiently through prayer, Scripture, and the steady care of other people.";
+    return `Scripture begins with the truth that the Father does not treat you as disposable; you are his creature, made with dignity. ${emphasis} The Son comes near to the ashamed and weary rather than recoiling from them, and the Holy Spirit restores hope patiently through prayer, Scripture, and the steady care of other people.`;
   }
   if (risks.includes("vengeance") || risks.includes("hatred")) {
-    return "Scripture can name the wrong without handing your soul over to revenge. The Father loves justice more purely than we do; the Son teaches mercy from the place of his own suffering; and the Holy Spirit can heal the part of the heart that wants punishment more than restoration.";
+    return `Scripture can name the wrong without handing your soul over to revenge. ${emphasis} The Father loves justice more purely than we do; the Son teaches mercy from the place of his own suffering; and the Holy Spirit can heal the part of the heart that wants punishment more than restoration.`;
   }
   if (ideas.includes("forgiveness")) {
-    return "Scripture does not pretend the wound is small. The Father sees the wrong truthfully, the Son shows mercy without denying evil, and the Holy Spirit can begin making obedience possible before your feelings have caught up.";
+    return `Scripture does not pretend the wound is small. ${emphasis} The Father sees the wrong truthfully, the Son shows mercy without denying evil, and the Holy Spirit can begin making obedience possible before your feelings have caught up.`;
   }
   if (ideas.includes("suffering") || ideas.includes("fatherly discipline")) {
-    return "Scripture holds suffering more carefully than a simple punishment story. The Father tells the truth without cruelty, the Son enters suffering and redeems it from within, and the Holy Spirit comforts without asking you to pretend the pain is small.";
+    return `Scripture holds suffering more carefully than a simple punishment story. ${emphasis} The Father tells the truth without cruelty, the Son enters suffering and redeems it from within, and the Holy Spirit comforts without asking you to pretend the pain is small.`;
   }
 
   return "";
@@ -357,11 +498,24 @@ function stripArticleLead(text) {
     .replace(/\.$/, "");
 }
 
-function buildScriptureSentence(anchor) {
+function buildScriptureSentence(anchor, guidance) {
   const reference = anchor.reference || "Scripture";
   const rationale = anchor.rationale || "Scripture gives language for this without flattening it.";
+  const emphasis = buildScriptureEmphasisLine(guidance);
 
-  return ` ${reference} gives language for this: ${lowercaseFirst(rationale.replace(/\.$/, ""))}.`;
+  return ` ${reference} gives language for this: ${lowercaseFirst(rationale.replace(/\.$/, ""))}.${emphasis ? ` ${emphasis}` : ""}`;
+}
+
+function buildScriptureEmphasisLine(guidance) {
+  const emphasis = guidance && guidance.scriptureEmphasis && guidance.scriptureEmphasis[0]
+    ? String(guidance.scriptureEmphasis[0])
+    : "";
+
+  if (!emphasis) {
+    return "";
+  }
+
+  return `I would keep ${lowercaseFirst(emphasis.replace(/\.$/, ""))} in the foreground here.`;
 }
 
 function lowercaseFirst(text) {

@@ -6,6 +6,7 @@ const { analyzeDiscernment } = window.ShepherdDiscernmentEngine;
 const { analyzeDivinePattern } = window.ShepherdDivinePatternEngine;
 const { buildRuleOfLife } = window.ShepherdRuleOfLifeEngine;
 const { composeShepherdResponse } = window.ShepherdResponseComposer;
+const { buildVoiceContext } = window.ShepherdVoiceReasoningEngine || {};
 
 // Privacy model:
 // Shepherd has no backend, database, analytics, storage, or AI API.
@@ -321,10 +322,21 @@ form.addEventListener("submit", (event) => {
     selectedVoice
   });
   const voiceProfile = voiceProfiles[selectedVoice] || voiceProfiles["Shepherd"];
+  const voiceContext = typeof buildVoiceContext === "function"
+    ? buildVoiceContext({
+        selectedVoice,
+        voiceProfile,
+        understanding,
+        discernment,
+        divinePattern: divinePatternAnalysis,
+        ruleOfLife
+      })
+    : null;
   const composedResponse = composeShepherdResponse({
     userMessage: sessionDraft.concern,
     selectedVoice,
     voiceProfile,
+    voiceContext,
     understanding,
     discernment,
     divinePattern: divinePatternAnalysis,
@@ -332,7 +344,7 @@ form.addEventListener("submit", (event) => {
     concernAnalysis: analysis
   });
 
-  logDeveloperDebug({ understanding, discernment, analysis, divinePatternAnalysis, ruleOfLife, composedResponse });
+  logDeveloperDebug({ understanding, discernment, analysis, divinePatternAnalysis, ruleOfLife, voiceContext, composedResponse });
   renderPlan(sessionDraft, composedResponse);
 });
 
