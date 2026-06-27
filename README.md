@@ -79,6 +79,25 @@ The Understanding Engine observes what the user appears to be saying. The Discer
 
 This object helps Shepherd distinguish the suffering person from a possibly false belief or harmful spiritual direction. It is used internally by the Divine Pattern layer and visible response builders, but normal users do not see the raw object.
 
+## Shepherd Response Composer
+
+Version 5 adds the final structured response stage:
+
+```js
+composeShepherdResponse({ userMessage, selectedVoice, voiceProfile, understanding, discernment, divinePattern, concernAnalysis })
+```
+
+The Response Composer receives the Understanding Engine, Discernment Engine, Divine Pattern Engine, and selected voice context, then produces the six visible pastoral sections:
+
+- Pastoral Acknowledgment
+- Truth / Correction
+- Divine Pattern Insight
+- Things You May Not Have Considered
+- Practical Next Step
+- Short Prayer
+
+The composer keeps the final response consistent across voices while preserving the selected voice as a perspective lens. It does not expose raw internal JSON to normal users.
+
 ## Discernment Engine
 
 Version 2 includes a static rule-based function:
@@ -113,6 +132,7 @@ User input
 -> transient discernment / correction analysis
 -> transient Divine Pattern analysis
 -> selected Shepherd voice or perspective lens
+-> Shepherd Response Composer
 -> final visible response
 ```
 
@@ -209,7 +229,7 @@ All analysis is transient and in memory while the page is open.
 
 Open `index.html` in a browser. No build step is required.
 
-Developer debug mode is available by adding `?debug` or `#debug` to the page URL. In that mode, Shepherd writes the internal Understanding Engine object, Discernment Engine object, legacy correction analysis, and Divine Pattern analysis to the browser console for testing. Normal users do not see these objects in the page.
+Developer debug mode is available by adding `?debug` or `#debug` to the page URL. In that mode, Shepherd writes the internal Understanding Engine object, Discernment Engine object, legacy correction analysis, Divine Pattern analysis, and composed response structure to the browser console for testing. Normal users do not see these objects in the page.
 
 ## Project Structure
 
@@ -219,6 +239,7 @@ Shepherd/
   styles.css
   understandingEngine.js
   discernmentEngine.js
+  responseComposer.js
   app.js
   divine-pattern-engine.js
   README.md
@@ -229,6 +250,7 @@ Shepherd/
 - `divine-pattern-engine.js` is dependency-free.
 - `understandingEngine.js` is dependency-free and must load before `app.js`.
 - `discernmentEngine.js` is dependency-free and must load after `understandingEngine.js` and before `app.js`.
+- `responseComposer.js` is dependency-free and must load before `app.js`.
 - Divine Pattern analysis is performed in memory only.
 - The Divine Pattern engine receives the Understanding Engine and Discernment Engine objects as context and records their entries internally.
 - The UI displays only a short pastoral summary, not the raw analysis object.

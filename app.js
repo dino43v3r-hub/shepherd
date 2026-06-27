@@ -4,6 +4,7 @@ const clearButton = document.querySelector("#clear-button");
 const { analyzeUnderstanding } = window.ShepherdUnderstandingEngine;
 const { analyzeDiscernment } = window.ShepherdDiscernmentEngine;
 const { analyzeDivinePattern } = window.ShepherdDivinePatternEngine;
+const { composeShepherdResponse } = window.ShepherdResponseComposer;
 
 // Privacy model:
 // Shepherd has no backend, database, analytics, storage, or AI API.
@@ -395,10 +396,20 @@ form.addEventListener("submit", (event) => {
     understanding,
     discernment
   });
+  const voiceProfile = voiceProfiles[selectedVoice] || voiceProfiles["Shepherd"];
+  const composedResponse = composeShepherdResponse({
+    userMessage: sessionDraft.concern,
+    selectedVoice,
+    voiceProfile,
+    understanding,
+    discernment,
+    divinePattern: divinePatternAnalysis,
+    concernAnalysis: analysis
+  });
 
-  logDeveloperDebug({ understanding, discernment, analysis, divinePatternAnalysis });
-  lastResponse = { data: sessionDraft, understanding, discernment, analysis, divinePatternAnalysis };
-  renderPlan(sessionDraft, understanding, discernment, analysis, divinePatternAnalysis);
+  logDeveloperDebug({ understanding, discernment, analysis, divinePatternAnalysis, composedResponse });
+  lastResponse = { data: sessionDraft, understanding, discernment, analysis, divinePatternAnalysis, composedResponse };
+  renderPlan(sessionDraft, composedResponse);
 });
 
 clearButton.addEventListener("click", clearSession);
@@ -614,13 +625,12 @@ function logDeveloperDebug(payload) {
   console.log("Discernment object", payload.discernment);
   console.log("Discernment / correction analysis", payload.analysis);
   console.log("Divine Pattern analysis", payload.divinePatternAnalysis);
+  console.log("Composed response structure", payload.composedResponse);
   console.groupEnd();
 }
 
-function renderPlan(data, understanding, discernment, analysis, divinePatternAnalysis) {
+function renderPlan(data, composedResponse) {
   const voice = voiceProfiles[data.voice] || voiceProfiles["Shepherd"];
-  const scriptures = buildScriptureSelection(analysis);
-  const nextStep = buildHumanNextStep(analysis);
   const isPrimaryShepherd = data.voice === "Shepherd";
 
   form.classList.add("hidden");
@@ -636,15 +646,12 @@ function renderPlan(data, understanding, discernment, analysis, divinePatternAna
         <button type="button" id="result-clear-button" class="secondary">Clear Everything</button>
       </div>
     </div>
-    ${section("Pastoral Reading", "Pastoral wisdom", buildPastoralReading(data, understanding, discernment, analysis, voice))}
-    ${section("Divine Pattern Layer", "Pastoral pattern summary", buildDivinePatternLayer(divinePatternAnalysis))}
-    ${analysis.possibleTheologicalDistortions.length ? section("Gentle Correction", "Scripture and pastoral wisdom", correctionBlock(analysis, voice)) : ""}
-    ${section("Scripture with Context", "Scripture", scriptureList(scriptures))}
-    ${section("Things You May Not Have Considered", "Discernment considerations", list(buildConsiderations(analysis, understanding, discernment)))}
-    ${section("Christian Tradition Perspective", "Christian tradition summary", `<p>${escapeHtml(traditionPerspectives[data.tradition])}</p>`)}
-    ${section("Suggested Prayer", "Pastoral wisdom", `<p>${escapeHtml(buildPrayer(data, understanding, discernment, analysis, voice))}</p>`)}
-    ${section("Recommended Human Next Step", "Caution / safety boundary", `<p>${escapeHtml(nextStep)}</p>`)}
-    ${section("Boundaries and Cautions", "Caution / safety boundary", list(buildBoundaries(analysis)))}
+    ${section("Pastoral Acknowledgment", "Pastoral wisdom", paragraph(composedResponse.pastoralAcknowledgment))}
+    ${section("Truth / Correction", "Discernment", paragraph(composedResponse.truthCorrection))}
+    ${section("Divine Pattern Insight", "Pastoral pattern summary", paragraph(composedResponse.divinePatternInsight))}
+    ${section("Things You May Not Have Considered", "Discernment considerations", list(composedResponse.thingsNotConsidered))}
+    ${section("Practical Next Step", "Caution / safety boundary", paragraph(composedResponse.practicalNextStep))}
+    ${section("Short Prayer", "Prayer", paragraph(composedResponse.shortPrayer))}
   `;
   result.classList.remove("hidden");
   result.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -980,6 +987,10 @@ function scriptureList(items) {
 
 function list(items) {
   return `<ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
+}
+
+function paragraph(text) {
+  return `<p>${escapeHtml(text)}</p>`;
 }
 
 function labelFromId(id) {
