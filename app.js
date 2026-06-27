@@ -11,7 +11,6 @@ const { composeShepherdResponse } = window.ShepherdResponseComposer;
 // Shepherd has no backend, database, analytics, storage, or AI API.
 // User text lives only in browser memory while this page is open.
 let sessionDraft = null;
-let lastResponse = null;
 const developerDebugEnabled = new URLSearchParams(window.location.search).has("debug")
   || window.location.hash.toLowerCase().includes("debug");
 
@@ -35,128 +34,46 @@ const crisisTerms = [
   "emergency"
 ];
 
-const traditionPerspectives = {
-  "General Christian": "A broad Christian reading should hold together Scripture, prayer, confession where needed, mercy, truth, and wise counsel in community.",
-  "Baptist": "A Baptist reading often emphasizes Scripture, personal repentance and faith, prayer, discipleship, local church accountability, and voluntary obedience.",
-  "Methodist/Wesleyan": "A Methodist/Wesleyan reading often emphasizes prevenient and sanctifying grace, practical holiness, small-group support, and love of God and neighbor.",
-  "Reformed": "A Reformed reading often emphasizes God's covenant faithfulness, repentance and faith, sober self-examination, ordinary means of grace, and hope grounded in Christ.",
-  "Lutheran": "A Lutheran reading often distinguishes law and gospel: God's Word exposes sin and false refuge, then gives the promise of mercy in Christ.",
-  "Anglican": "An Anglican reading often emphasizes Scripture, ordered prayer, confession and absolution, sacramental life, pastoral counsel, and steady formation through common worship.",
-  "Roman Catholic": "A Roman Catholic reading often emphasizes formed conscience, sacramental grace, confession where needed, spiritual direction, works of mercy, and the Church's moral wisdom.",
-  "Eastern Orthodox": "An Eastern Orthodox reading often frames the struggle as healing and return to communion with Christ through repentance, prayer, spiritual counsel, and life in the Church.",
-  "Pentecostal/Charismatic": "A Pentecostal/Charismatic reading often emphasizes Scripture, prayer, dependence on the Holy Spirit, discernment in community, worship, and hopeful obedience."
-};
-
 const voiceProfiles = {
   "Shepherd": {
     emphasis: "truth, mercy, Scripture in context, wise human counsel, and one faithful next step",
-    comfort: "Shepherd holds this first with the mercy of Christ, without rushing past the pain or letting the pain become the whole story.",
-    challenge: "Shepherd should test the strongest conclusion by Scripture, prayer, wise counsel, and the fruit it is likely to bear.",
-    compare: "Shepherd keeps the main response centered on truth, mercy, Scripture in context, wise human counsel, and one faithful next step."
+    challenge: "Test the strongest conclusion by Scripture, prayer, wise counsel, and the fruit it is likely to bear."
   },
   "Paul": {
     emphasis: "grace, union with Christ, endurance, correction, and community",
-    comfort: "Your pain should be brought under the mercy of Christ, not treated as proof that grace has failed.",
-    challenge: "Test the conclusion by the gospel: does it lead toward faith working through love, or toward fear, shame, and isolation?",
-    compare: "Paul might emphasize grace in Christ, endurance under trial, honest correction, and the need to carry this with the body of believers."
+    challenge: "Test the conclusion by the gospel: does it lead toward faith working through love, or toward fear, shame, and isolation?"
   },
   "Augustine": {
     emphasis: "disordered loves, confession, restlessness, desire, and return to God",
-    comfort: "A restless heart is not a rejected heart; it may be a heart being summoned back to God.",
-    challenge: "Ask what love is ruling the moment: love of God, love of control, love of approval, or love of being vindicated.",
-    compare: "Augustine might ask what desire has become disordered and how confession could turn restlessness back toward God."
+    challenge: "Ask what love is ruling the moment: love of God, love of control, love of approval, or love of being vindicated."
   },
   "C.S. Lewis": {
     emphasis: "imagination, reason, pride, humility, moral clarity, and honest language",
-    comfort: "Do not let the loudest image in your mind become your whole theology of God.",
-    challenge: "Reason and humility both matter here: the feeling may be real without being a reliable judge of ultimate truth.",
-    compare: "C.S. Lewis might press for moral clarity, humble imagination, and a refusal to let pride or fear dress itself up as wisdom."
+    challenge: "Reason and humility both matter here: the feeling may be real without being a reliable judge of ultimate truth."
   },
   "Bonhoeffer": {
     emphasis: "costly obedience, community, discipleship, truthful action, and responsibility",
-    comfort: "Christ does not call you to vague heroics; he calls you to the next concrete act of faithful obedience in community.",
-    challenge: "Grace is not permission to avoid costly truth. Discernment should become responsible action, not endless inward circling.",
-    compare: "Bonhoeffer might warn against cheap grace, private isolation, and delay when discipleship requires concrete action."
+    challenge: "Grace is not permission to avoid costly truth. Discernment should become responsible action, not endless inward circling."
   },
   "Spurgeon": {
     emphasis: "comfort, hope, tenderness, gospel assurance, and weary-soul encouragement",
-    comfort: "A bruised reed is not thrown away by Christ. Bring the wound into his mercy without pretending it is smaller than it is.",
-    challenge: "Do not let sorrow preach a sermon that Christ himself would not preach over you.",
-    compare: "Spurgeon might give tender gospel assurance, especially where shame, fear, or grief is trying to drown out hope."
+    challenge: "Do not let sorrow preach a sermon that Christ himself would not preach over you."
   },
   "Thoughtful pastor": {
     emphasis: "balanced pastoral care, Scripture, emotional honesty, wise caution, and next faithful steps",
-    comfort: "This should be held with both tenderness and truth; you do not need to rush to a final verdict tonight.",
-    challenge: "A faithful response may need both comfort and correction, depending on what is true and what is merely loud.",
-    compare: "A thoughtful pastor might balance comfort, correction, Scripture, practical support, and a concrete human next step."
+    challenge: "A faithful response may need both comfort and correction, depending on what is true and what is merely loud."
   },
   "Trusted Christian friend": {
     emphasis: "warm honesty, companionship, practical help, courage, and faithful candor",
-    comfort: "You do not have to carry this alone, and you do not have to make pain sound prettier before asking for help.",
-    challenge: "A faithful friend would believe your pain matters while still refusing to let a false conclusion rule you.",
-    compare: "A trusted Christian friend might speak warmly and plainly, helping you take one honest step instead of spiraling alone."
+    challenge: "A faithful friend would believe your pain matters while still refusing to let a false conclusion rule you."
   }
-};
-
-const responseTypeLabels = {
-  comfort: "comfort",
-  correction: "correction",
-  warning: "warning",
-  encouragement: "encouragement",
-  repentance: "repentance",
-  boundaries: "boundaries",
-  counsel: "wise counsel",
-  practical: "practical next steps"
-};
-
-const scriptureByFocus = {
-  grief: [
-    ["Psalm 13", "The psalm gives faithful language for sorrow, protest, waiting, and renewed trust."],
-    ["John 11:32-36", "Jesus meets grief with presence and tears, showing that mourning is not unbelief."]
-  ],
-  fear: [
-    ["Psalm 56:3-4", "The psalm names fear honestly and turns toward trust without pretending fear is simple."],
-    ["1 Peter 5:6-7", "Peter joins humility, God's care, and casting anxieties on the Lord within a suffering community."]
-  ],
-  guilt: [
-    ["1 John 1:8-9", "John holds together honest confession and confidence in God's faithful forgiveness."],
-    ["Psalm 32:3-5", "The psalm connects hidden guilt with heaviness and confession with mercy."]
-  ],
-  forgiveness: [
-    ["Ephesians 4:31-32", "Paul roots Christian forgiveness in God's mercy while the wider passage also calls for truthful renewed relationships."],
-    ["Romans 12:18", "Paul says to live peaceably so far as it depends on you, which recognizes real limits."]
-  ],
-  conflict: [
-    ["Romans 12:9-18", "Christian love is sincere, patient, honorable, and peace-seeking without pretending evil is good."],
-    ["James 1:19-20", "James calls believers to be quick to hear, slow to speak, and slow to anger."]
-  ],
-  doubt: [
-    ["Mark 9:24", "A desperate father brings both belief and unbelief to Jesus."],
-    ["John 20:24-29", "Thomas is met by the risen Christ with evidence and invitation, not mockery."]
-  ],
-  decision: [
-    ["James 1:5", "James encourages believers to ask God for wisdom amid testing, with humility and trust."],
-    ["Proverbs 3:5-6", "The proverb commends whole-life trust rather than isolated proof-text decision making."]
-  ],
-  loneliness: [
-    ["Hebrews 10:24-25", "The church is called to stir one another up to love and good works, not to drift into isolation."],
-    ["Galatians 6:2", "Paul calls believers to bear one another's burdens as part of life in Christ."]
-  ],
-  harm: [
-    ["Proverbs 31:8-9", "Wisdom calls God's people to speak for those who need protection and justice."],
-    ["Micah 6:8", "The prophet joins humility before God with doing justice and loving mercy."]
-  ],
-  general: [
-    ["Matthew 11:28-30", "Jesus invites the weary to come to him and learn his gentle yoke."],
-    ["Philippians 4:6-7", "Paul invites anxious believers to bring requests to God with thanksgiving and receive God's guarding peace."]
-  ]
 };
 
 const theologicalDistortions = [
   {
     id: "god_hates_me",
     patterns: ["god hates me", "god must hate me"],
-    correction: "Shepherd should gently reject the conclusion that God hates you. Pain, discipline, failure, or silence may need lament and counsel, but they are not proof that God's love has vanished.",
+    correction: "Gently reject the conclusion that God hates you. Pain, discipline, failure, or silence may need lament and counsel, but they are not proof that God's love has vanished.",
     scripture: ["Romans 8:38-39", "Paul says nothing in creation can separate believers from the love of God in Christ Jesus."],
     responseTypes: ["comfort", "correction", "counsel"]
   },
@@ -191,7 +108,7 @@ const theologicalDistortions = [
   {
     id: "worthless_identity",
     patterns: ["i am worthless", "i'm worthless", "worthless", "god must be tired of me", "god is tired of me", "tired of me"],
-    correction: "Shepherd should gently reject the conclusion that you are worthless or that God is weary of you. Shame may feel authoritative, but it is not the voice that names your identity before God.",
+    correction: "Gently reject the conclusion that you are worthless or that God is weary of you. Shame may feel authoritative, but it is not the voice that names your identity before God.",
     scripture: ["Matthew 11:28-30", "Jesus invites the weary to come to him and learn his gentle yoke."],
     responseTypes: ["comfort", "correction", "counsel"]
   },
@@ -372,7 +289,6 @@ form.addEventListener("submit", (event) => {
   }
 
   if (containsCrisisLanguage(sessionDraft.concern)) {
-    lastResponse = null;
     renderCrisisMessage();
     return;
   }
@@ -417,7 +333,6 @@ form.addEventListener("submit", (event) => {
   });
 
   logDeveloperDebug({ understanding, discernment, analysis, divinePatternAnalysis, ruleOfLife, composedResponse });
-  lastResponse = { data: sessionDraft, understanding, discernment, analysis, divinePatternAnalysis, ruleOfLife, composedResponse };
   renderPlan(sessionDraft, composedResponse);
 });
 
@@ -432,9 +347,6 @@ result.addEventListener("click", (event) => {
     clearSession();
   }
 
-  if (event.target.id === "compare-button" && lastResponse) {
-    renderVoiceComparison(lastResponse.data, lastResponse.understanding, lastResponse.discernment, lastResponse.analysis);
-  }
 });
 
 function collectInputs() {
@@ -652,7 +564,6 @@ function renderPlan(data, composedResponse) {
       <p class="fine-print">${escapeHtml(isPrimaryShepherd ? "Voice" : "Voice, as a perspective lens")}: ${escapeHtml(data.voice)}.</p>
       <div class="result-actions">
         <button type="button" id="print-button" class="primary">Print / Save as PDF</button>
-        <button type="button" id="compare-button" class="secondary">Additional Faithful Perspectives</button>
         <button type="button" id="result-clear-button" class="secondary">Clear Everything</button>
       </div>
     </div>
@@ -686,334 +597,6 @@ function conversationSections(sections) {
   }).join("");
 }
 
-function buildDivinePatternLayer(divinePatternAnalysis) {
-  if (!divinePatternAnalysis) {
-    return "<p>Shepherd does not have enough pattern context to add this layer yet.</p>";
-  }
-
-  const summary = formatDivinePatternSummary(divinePatternAnalysis.summaryForShepherd);
-  const scriptureAnchor = divinePatternAnalysis.scriptureAnchor || {};
-  const pastoralRisk = divinePatternAnalysis.pastoralRisk || {};
-  const riskLevel = String(pastoralRisk.level || "low").toLowerCase();
-  const anchorText = scriptureAnchor.reference
-    ? `${scriptureAnchor.reference}: ${scriptureAnchor.rationale || "Hold this passage in context with prayer and wise counsel."}`
-    : "Hold Scripture in context with prayer and wise counsel.";
-  const cautionText = riskLevel === "high"
-    ? "A caution to hold carefully is that this may need trusted human support before it needs more private reflection. If danger, despair, coercion, or self-harm may be involved, contact emergency help, a crisis line, a pastor or priest, counselor, doctor, or another safe person now."
-    : `A caution to hold carefully is this: ${divinePatternAnalysis.guardrail}`;
-
-  return `
-    <p>One pattern Shepherd notices is ${escapeHtml(summary)}.</p>
-    <p>A helpful theological anchor may be ${escapeHtml(anchorText)}</p>
-    <p>${escapeHtml(cautionText)}</p>
-  `;
-}
-
-function formatDivinePatternSummary(summaryForShepherd) {
-  const summary = String(summaryForShepherd || "")
-    .split(".")
-    .map((sentence) => sentence.trim())
-    .filter((sentence) =>
-      sentence &&
-      !sentence.toLowerCase().startsWith("confidence:") &&
-      !sentence.toLowerCase().startsWith("pastoral risk:")
-    );
-  const patternSentence = summary.find((sentence) => sentence.toLowerCase().startsWith("possible divine pattern:"));
-
-  if (patternSentence) {
-    return patternSentence
-      .replace(/^possible divine pattern:\s*/i, "")
-      .replace(/\s+/g, " ")
-      .trim();
-  }
-
-  return "a call to hold truth, mercy, Scripture, and wise human counsel together";
-}
-
-function buildPastoralReading(data, understanding, discernment, analysis, voice) {
-  const responseText = analysis.responseTypes.map((type) => responseTypeLabels[type] || type).join(", ");
-  const emotionText = analysis.likelyEmotions.length
-    ? `Shepherd hears ${joinHumanList(analysis.likelyEmotions)} in what you wrote.`
-    : "Shepherd cannot name the emotions yet from the wording alone.";
-  const overlapText = analysis.overlaps.length
-    ? `There may also be overlap with ${joinHumanList(analysis.overlaps)}.`
-    : "No strong secondary issue was clear from the wording.";
-  const meaningText = understanding.userMeaning.summary;
-  const needText = understanding.deeperNeeds.length
-    ? `Beneath the surface, this may call for ${joinHumanList(understanding.deeperNeeds.slice(0, 4))}.`
-    : "Beneath the surface, this needs prayer, humility, and wise counsel.";
-  const strategyText = [
-    understanding.pastoralStrategy.primary,
-    ...understanding.pastoralStrategy.supporting
-  ].filter(Boolean).join(", ");
-  const priorityText = discernment.pastoralPriority.length
-    ? joinHumanList(discernment.pastoralPriority)
-    : "prayerful reflection and a practical next step";
-  const correctionText = discernment.correctionTone === "none"
-    ? "No direct correction is clear from the wording, so Shepherd should stay humble."
-    : `The correction tone should be ${discernment.correctionTone}, aimed at the belief or direction rather than condemnation of the person.`;
-
-  return `
-    <p>${escapeHtml(meaningText)} ${escapeHtml(emotionText)} ${escapeHtml(needText)}</p>
-    <p>The likely spiritual or pastoral issue is ${escapeHtml(analysis.possibleSpiritualIssue)}. ${escapeHtml(overlapText)}</p>
-    <p>${escapeHtml(voiceProfiles["Shepherd"].comfort)} ${escapeHtml(voiceProfiles["Shepherd"].challenge)}</p>
-    ${data.voice === "Shepherd" ? "" : `<p>${escapeHtml(buildPerspectiveLine(data.voice, voice))}</p>`}
-    <p>The response seems to call for ${escapeHtml(responseText)} rather than simple affirmation. In pastoral strategy terms: ${escapeHtml(strategyText)}. Discernment should prioritize ${escapeHtml(priorityText)}. ${escapeHtml(correctionText)}</p>
-  `;
-}
-
-function correctionBlock(analysis, voice) {
-  const items = analysis.possibleTheologicalDistortions.map((distortion) => `
-    <div class="reasoning-item">
-      <strong>${escapeHtml(labelFromId(distortion.id))}</strong>
-      <span>${escapeHtml(distortion.correction)} ${escapeHtml(voice.challenge)}</span>
-    </div>
-  `).join("");
-  return `<div class="reasoning-grid">${items}</div>`;
-}
-
-function buildPerspectiveLine(voiceName, voice) {
-  const openings = {
-    "C.S. Lewis": "A C.S. Lewis-style perspective might notice",
-    "Thoughtful pastor": "A thoughtful pastor perspective might notice",
-    "Trusted Christian friend": "A trusted Christian friend perspective might notice"
-  };
-  const opening = openings[voiceName] || `Seen through the perspective of ${voiceName}, Shepherd might notice`;
-
-  return `${opening}: ${voice.comfort} ${voice.challenge}`;
-}
-
-function buildScriptureSelection(analysis) {
-  const theologicalScriptures = analysis.possibleTheologicalDistortions.map((item) => item.scripture);
-  const base = scriptureByFocus[analysis.focus] || scriptureByFocus.general;
-  return [...theologicalScriptures, ...base].slice(0, 3);
-}
-
-function buildConsiderations(analysis, understanding = null, discernment = null) {
-  const considerations = [];
-
-  if (understanding) {
-    understanding.assumptionsDetected.forEach((assumption) => {
-      considerations.push(`${assumption.statement} ${assumption.pastoralNote}`);
-    });
-  }
-
-  if (discernment) {
-    discernment.possibleErrors.forEach((error) => {
-      considerations.push(error);
-    });
-    discernment.missingBiblicalIdeas.slice(0, 3).forEach((idea) => {
-      considerations.push(`A biblical idea to bring back into view is ${idea}.`);
-    });
-    discernment.spiritualRisks.slice(0, 2).forEach((risk) => {
-      considerations.push(`A spiritual risk to watch is ${risk}.`);
-    });
-  }
-
-  analysis.possibleTheologicalDistortions.forEach((distortion) => {
-    considerations.push(distortion.correction);
-  });
-
-  analysis.possibleCognitiveDistortions.forEach((distortion) => {
-    considerations.push(distortion.observation);
-  });
-
-  if (analysis.responseTypes.includes("boundaries")) {
-    considerations.push("Forgiveness and boundaries are not enemies. A Christian response can pursue mercy while refusing to enable harm.");
-  }
-
-  if (analysis.responseTypes.includes("repentance")) {
-    considerations.push("Repentance is not self-punishment. It is truthful return to God, repair where possible, and receiving mercy without pretending sin is harmless.");
-  }
-
-  if (analysis.responseTypes.includes("counsel")) {
-    considerations.push("This may become clearer when spoken aloud to a mature Christian, pastor, priest, counselor, or trusted friend who can ask careful questions.");
-  }
-
-  if (analysis.themes.length) {
-    considerations.push(`The Scripture tension may be between ${analysis.themes.slice(0, 2).join(" and ")}; both sides deserve attention.`);
-  }
-
-  const focusConsiderations = {
-    grief: [
-      "Grief may need faithful lament before it needs a plan; moving too quickly to explanation can leave sorrow unheard.",
-      "Hope in Christ does not require pretending the loss is small."
-    ],
-    fear: [
-      "Fear may be naming a real concern, but it is not wise enough to become the only counselor.",
-      "Peace may begin with one embodied step of trust, not with solving every possible outcome."
-    ],
-    guilt: [
-      "The difference between conviction and condemnation matters here: conviction leads toward confession and life; condemnation leads toward hiding.",
-      "Grace does not make repair unnecessary, but it keeps repair from becoming self-punishment."
-    ],
-    forgiveness: [
-      "Reconciliation may require repentance, truth, time, and rebuilt trust; forgiveness alone does not instantly restore safety.",
-      "Mercy can be sincere while boundaries remain firm."
-    ],
-    conflict: [
-      "The timing and manner of truth-telling may matter as much as the truth being spoken.",
-      "Peace is not the same as avoiding the conversation; it is truth pursued without contempt."
-    ],
-    doubt: [
-      "Confusion may need patient teaching and prayer rather than shame or rushed certainty.",
-      "A hard question can be brought into Christian community without treating doubt as rebellion."
-    ],
-    decision: [
-      "A decision may look spiritual while still being driven by fear, pressure, pride, or avoidance.",
-      "Wise discernment usually compares likely fruit, motives, counsel, and Scripture rather than waiting for one perfect feeling."
-    ],
-    loneliness: [
-      "Isolation can make painful conclusions sound more certain than they are.",
-      "The next faithful step may be one honest conversation, not a complete life overhaul."
-    ],
-    harm: [
-      "Spiritual language should never be used to keep danger hidden or to protect someone who is causing harm.",
-      "Safety and truth-telling can be acts of faithfulness, not failures of love."
-    ],
-    general: [
-      "The concern may need more context before a strong conclusion is wise.",
-      "A humble next step may be to name the burden clearly to one trustworthy person."
-    ]
-  };
-
-  const fallbackConsiderations = focusConsiderations[analysis.focus] || focusConsiderations.general;
-  fallbackConsiderations.forEach((item) => considerations.push(item));
-
-  if (!considerations.length) {
-    considerations.push("The wording is open-ended, so the wisest posture is humility: name what you know, admit what you do not, and seek counsel before acting.");
-  }
-
-  return unique(considerations).slice(0, 5);
-}
-
-function buildPrayer(data, understanding, discernment, analysis, voice) {
-  const lensRequest = data.voice === "Shepherd"
-    ? "Give me truth and mercy"
-    : `Let this ${data.voice} perspective serve truth and mercy`;
-  const need = understanding.deeperNeeds[0] || analysis.possibleSpiritualIssue;
-  const growth = discernment.growthOpportunities[0] || "one faithful next step";
-
-  return `Lord Jesus, meet me with truth and mercy. Help me name ${analysis.possibleSpiritualIssue} without panic or self-deception, give me ${need}, and lead me toward ${growth}. ${lensRequest}, Scripture held in context, and courage to seek wise human help. Amen.`;
-}
-
-function buildHumanNextStep(analysis) {
-  if (analysis.hasHarmLanguage) {
-    return "If anyone is unsafe, seek immediate human help from emergency services, a safe person, a pastor or priest, counselor, doctor, advocate, or local support service. Do not let spiritual language keep harm hidden.";
-  }
-  if (analysis.medicalOrMentalHealth) {
-    return "Bring this to a doctor, counselor, or qualified mental health professional, and also ask a trusted pastor, priest, or mature Christian to support you spiritually.";
-  }
-  if (analysis.responseTypes.includes("repentance")) {
-    return "Make a concrete confession to God, consider confession or pastoral counsel in your tradition, and identify one repair or accountability step that does not depend on self-hatred.";
-  }
-  if (analysis.focus === "grief") {
-    return "Tell one pastor, priest, mature Christian friend, counselor, or grief-support person what you are carrying, and ask them to sit with you without rushing the sorrow.";
-  }
-  if (analysis.focus === "conflict" || analysis.focus === "forgiveness") {
-    return "Before a major conversation, ask a wise mediator, pastor, priest, counselor, or mature Christian to help you separate truth, repentance, forgiveness, and boundaries.";
-  }
-  if (analysis.focus === "doubt") {
-    return "Bring the theological confusion to a pastor, priest, Bible study leader, spiritual director, or mature Christian who can read Scripture with you in context.";
-  }
-  if (analysis.focus === "loneliness") {
-    return "Choose one trusted person this week and say plainly that you should not carry this alone. Keep the first step small but real.";
-  }
-  if (analysis.focus === "decision") {
-    return "Write down the real options, likely fruit, fears, and motives, then test them with a pastor, mentor, counselor, or wise Christian friend before acting.";
-  }
-  return "Share a brief, honest version of this with one trusted pastor, priest, mature Christian, counselor, doctor, mentor, or wise friend this week.";
-}
-
-function renderVoiceComparison(data, understanding, discernment, analysis) {
-  const selected = ["Paul", "Augustine", "Bonhoeffer"].includes(data.voice)
-    ? ["Spurgeon", "C.S. Lewis", "Thoughtful pastor"]
-    : ["Paul", "Augustine", "Bonhoeffer"];
-  const comparisons = selected.map((voiceName) => {
-    const voice = voiceProfiles[voiceName];
-    return `
-      <div class="compare-card">
-        <h4>${escapeHtml(voiceName)}</h4>
-        <p>${escapeHtml(voice.compare)}</p>
-      </div>
-    `;
-  }).join("");
-
-  const existing = document.querySelector("#voice-comparison");
-  if (existing) {
-    existing.remove();
-  }
-
-  result.insertAdjacentHTML("beforeend", section(
-    "Additional Faithful Perspectives",
-    "Discernment training",
-    `
-      <div id="voice-comparison">
-        <div class="compare-grid">${comparisons}</div>
-        <p><strong>Where they agree:</strong> ${escapeHtml(buildAgreementLine(analysis))}</p>
-        <p><strong>What Shepherd understood first:</strong> ${escapeHtml(understanding.userMeaning.summary)}</p>
-        <p><strong>What Shepherd discerned:</strong> ${escapeHtml(buildDiscernmentSummary(discernment))}</p>
-        <p><strong>Where they differ:</strong> They would place different weight on assurance, desire, moral clarity, costly obedience, tenderness, or practical counsel.</p>
-      </div>
-    `
-  ));
-}
-
-function buildDiscernmentSummary(discernment) {
-  const truths = discernment.truthsRecognized[0] || "There is something honest to acknowledge.";
-  const errors = discernment.possibleErrors[0] || "No strong error is clear from the wording alone.";
-  const priorities = discernment.pastoralPriority.length
-    ? joinHumanList(discernment.pastoralPriority)
-    : "humble counsel";
-
-  return `${truths} Shepherd should evaluate this possible direction: ${errors} The pastoral priority is ${priorities}.`;
-}
-
-function buildAgreementLine(analysis) {
-  if (analysis.possibleTheologicalDistortions.length) {
-    return "they would not affirm a false conclusion about God, grace, forgiveness, or harm simply because it feels powerful.";
-  }
-  if (analysis.responseTypes.includes("boundaries")) {
-    return "they would agree that love must be truthful and that mercy does not require enabling harm.";
-  }
-  if (analysis.responseTypes.includes("repentance")) {
-    return "they would agree that confession should lead toward grace-filled obedience, not despair.";
-  }
-  return "they would agree that discernment belongs in Scripture, prayer, humility, and Christian community.";
-}
-
-function buildBoundaries(analysis) {
-  const boundaries = [
-    "Shepherd is a preparation and reflection tool, not clergy, counseling, medical care, emergency help, or final spiritual authority.",
-    "This is static rule-based discernment from limited text. It is not a clinical diagnosis, prophecy, or private revelation.",
-    "User input is not stored, transmitted, analyzed by an AI API, or saved to browser storage.",
-    "If safety, abuse, self-harm, severe depression, medical concerns, violence, or legal danger may be involved, seek appropriate human help immediately."
-  ];
-
-  return boundaries;
-}
-
-function section(title, evidence, content) {
-  return `
-    <section class="result-section">
-      <div class="section-heading">
-        <h3>${title}</h3>
-        <span class="evidence-label">${evidence}</span>
-      </div>
-      ${content}
-    </section>
-  `;
-}
-
-function scriptureList(items) {
-  return `<div class="scripture-list">${items.map(([ref, context]) => `
-    <div class="scripture-item">
-      <h3>${escapeHtml(ref)}</h3>
-      <p>${escapeHtml(context)}</p>
-    </div>
-  `).join("")}</div>`;
-}
-
 function list(items) {
   return `<ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
 }
@@ -1022,23 +605,8 @@ function paragraph(text) {
   return `<p>${escapeHtml(text)}</p>`;
 }
 
-function labelFromId(id) {
-  return id.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
-
 function unique(items) {
   return [...new Set(items.filter(Boolean))];
-}
-
-function joinHumanList(items) {
-  const cleanItems = unique(items);
-  if (cleanItems.length <= 1) {
-    return cleanItems[0] || "";
-  }
-  if (cleanItems.length === 2) {
-    return `${cleanItems[0]} and ${cleanItems[1]}`;
-  }
-  return `${cleanItems.slice(0, -1).join(", ")}, and ${cleanItems[cleanItems.length - 1]}`;
 }
 
 function escapeHtml(value) {
@@ -1052,7 +620,6 @@ function escapeHtml(value) {
 
 function clearSession() {
   sessionDraft = null;
-  lastResponse = null;
   form.reset();
   result.classList.add("hidden");
   result.innerHTML = "";
@@ -1071,13 +638,16 @@ function renderCrisisMessage() {
       </div>
     </div>
     ${highRiskNotice("Because this may involve immediate danger, self-harm, abuse, violence, or severe crisis, do not use Shepherd as the next step. If there is immediate danger, call emergency services now. In the United States, call or text 988 for suicide or crisis support. Contact a safe person, pastor or priest, counselor, doctor, local crisis line, or appropriate professional support now.")}
-    ${section("Please reach out now", "Caution / safety boundary", `
-      <p>If there is immediate danger, call emergency services right now. In the United States, call or text 988 for the Suicide & Crisis Lifeline if self-harm, suicide, or severe crisis may be involved.</p>
-      <p>Contact a trusted person, pastor or priest, counselor, doctor, local crisis line, or appropriate professional. If abuse or violence is involved, seek safety first and contact local emergency or abuse-support services.</p>
-    `)}
-    ${section("A grounding step", "Pastoral wisdom", `
-      <p>Move near another safe person if possible, reduce access to anything that could be used for harm, and say plainly: "I need help right now."</p>
-    `)}
+    ${conversationSections([
+      {
+        heading: "Please reach out now",
+        content: "If there is immediate danger, call emergency services right now. In the United States, call or text 988 for the Suicide & Crisis Lifeline if self-harm, suicide, or severe crisis may be involved. Contact a trusted person, pastor or priest, counselor, doctor, local crisis line, or appropriate professional. If abuse or violence is involved, seek safety first and contact local emergency or abuse-support services."
+      },
+      {
+        heading: "A grounding step",
+        content: "Move near another safe person if possible, reduce access to anything that could be used for harm, and say plainly: I need help right now."
+      }
+    ])}
   `;
   result.classList.remove("hidden");
   result.scrollIntoView({ behavior: "smooth", block: "start" });

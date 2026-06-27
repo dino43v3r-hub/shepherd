@@ -138,7 +138,7 @@ It detects possible:
 
 The analysis shapes the final reflection, but the app avoids presenting it as a cold diagnostic report and does not expose confidence internals.
 
-## Divine Pattern Layer
+## Divine Pattern Reasoning
 
 Shepherd now includes a reusable Divine Pattern reasoning layer inspired by the Divine project. This layer looks for broad theological patterns such as lament moving toward trust, conviction moving toward mercy, fear moving toward wise trust, harm named for protection, or isolation moving toward communion.
 
@@ -158,9 +158,9 @@ User input
 -> final visible response
 ```
 
-The visible Divine Pattern Layer is intentionally short. It shows a pastoral summary, a Scripture anchor, and a caution or guardrail. It does not display the raw analysis object, JSON, internal IDs, or developer reasoning.
+The visible response does not expose this layer as a report. The Pastoral Conversation Composer weaves any useful pattern insight into ordinary pastoral language.
 
-The Divine Pattern Layer is a support layer, not an authority. Scripture, prayer, the Holy Spirit, and Christian community remain central.
+Divine Pattern reasoning is a support layer, not an authority. Scripture, prayer, the Holy Spirit, and Christian community remain central.
 
 ## Theological and Cognitive Distortions
 
@@ -177,7 +177,7 @@ Shepherd v2 can gently correct spiritually harmful conclusions, including ideas 
 
 It also checks for cognitive and spiritual patterns such as all-or-nothing thinking, despair, shame, blame shifting, revenge, bitterness, fear-led decisions, isolation, confusing conviction with condemnation, confusing patience with passivity, and confusing forgiveness with enabling harm.
 
-When these appear, Shepherd should lovingly test the conclusion rather than simply affirm it.
+When these appear, the final response should lovingly test the conclusion rather than simply affirm it.
 
 ## Things You May Not Have Considered
 

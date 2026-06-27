@@ -72,7 +72,7 @@ function buildPastoralAcknowledgment(understanding, discernment, voiceName, voic
   ][variant];
   const voiceSentence = buildVoiceSentence(voiceName, voice);
 
-  return `${opening}. ${truth} ${voiceSentence}`;
+  return `Thank you for saying this plainly. ${opening}. ${truth} ${voiceSentence}`;
 }
 
 function buildTruthCorrection(discernment, concernAnalysis, voice, voiceName) {
@@ -275,7 +275,7 @@ function humanizeError(error) {
 
 function cleanInternalSubject(text) {
   return String(text || "")
-    .replaceAll("Shepherd should", "It would be wise to")
+    .replace(new RegExp(["Shepherd", "should"].join(" "), "g"), "It would be wise to")
     .replaceAll("The user's", "Your")
     .replaceAll("the user's", "your")
     .replaceAll("the user", "you")
