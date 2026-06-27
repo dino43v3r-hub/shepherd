@@ -9,8 +9,11 @@ Shepherd v2 is still intentionally static:
 - No database
 - No analytics
 - No AI API calls
-- No `localStorage` or `sessionStorage`
+- No `localStorage`
+- No `sessionStorage`
+- No IndexedDB
 - No permanent storage of user input
+- No permanent storage of internal analysis
 
 User input remains only in browser memory while the page is open. Refreshing or clearing the page removes the current reflection. Print / Save as PDF uses the browser print dialog only.
 
@@ -53,6 +56,26 @@ It detects possible:
 - Confidence level: high, moderate, or low
 
 The analysis shapes the final reflection, but the app avoids presenting it as a cold diagnostic report. Confidence language stays humble and non-clinical.
+
+## Divine Pattern Layer
+
+Shepherd now includes a reusable Divine Pattern reasoning layer inspired by the Divine project. This layer looks for broad theological patterns such as lament moving toward trust, conviction moving toward mercy, fear moving toward wise trust, harm named for protection, or isolation moving toward communion.
+
+Divine remains a separate standalone website/project. It has not been merged into Shepherd, and Shepherd does not call Divine as a backend, API, database, or shared website runtime.
+
+The current in-browser flow is:
+
+```text
+User input
+-> transient Shepherd concern analysis
+-> transient Divine Pattern analysis
+-> selected voice response
+-> final visible response
+```
+
+The visible Divine Pattern Layer is intentionally short. It shows a pastoral summary, a Scripture anchor, and a caution or guardrail. It does not display the raw analysis object, JSON, internal IDs, or developer reasoning.
+
+The Divine Pattern Layer is a support layer, not an authority. Scripture, prayer, the Holy Spirit, and Christian community remain central.
 
 ## Theological and Cognitive Distortions
 
@@ -119,6 +142,23 @@ Instead, it displays a crisis/support message encouraging immediate human help f
 
 The crisis check is simple static keyword logic. It is not a clinical classifier.
 
+## Privacy Model
+
+Shepherd's privacy model is intentionally simple:
+
+- No login required
+- No backend database
+- No `localStorage`
+- No `sessionStorage`
+- No IndexedDB
+- No analytics
+- No raw input saved
+- No internal Shepherd analysis saved
+- No internal Divine Pattern analysis saved
+- Refreshing the page clears the session
+
+All analysis is transient and in memory while the page is open.
+
 ## Running Locally
 
 Open `index.html` in a browser. No build step is required.
@@ -130,8 +170,17 @@ Shepherd/
   index.html
   styles.css
   app.js
+  divine-pattern-engine.js
   README.md
 ```
+
+## Development Notes
+
+- `divine-pattern-engine.js` is dependency-free.
+- Divine Pattern analysis is performed in memory only.
+- The UI displays only a short pastoral summary, not the raw analysis object.
+- Shepherd loads the Divine Pattern engine locally before `app.js`; it does not add a backend, API call, analytics call, database, or storage layer.
+- Divine remains separate from Shepherd.
 
 ## Future Roadmap
 

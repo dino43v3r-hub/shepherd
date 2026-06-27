@@ -1,6 +1,7 @@
 const form = document.querySelector("#reflection-form");
 const result = document.querySelector("#result");
 const clearButton = document.querySelector("#clear-button");
+const { analyzeDivinePattern } = window.ShepherdDivinePatternEngine;
 
 // Privacy model:
 // Shepherd has no backend, database, analytics, storage, or AI API.
@@ -351,8 +352,19 @@ form.addEventListener("submit", (event) => {
   }
 
   const analysis = analyzeConcern(sessionDraft.concern);
-  lastResponse = { data: sessionDraft, analysis };
-  renderPlan(sessionDraft, analysis);
+  const selectedVoice = sessionDraft.voice;
+  const shepherdContext = {
+    tradition: sessionDraft.tradition,
+    selectedVoice,
+    concernAnalysis: analysis
+  };
+  const divinePatternAnalysis = analyzeDivinePattern(sessionDraft.concern, {
+    selectedVoice,
+    shepherdContext
+  });
+
+  lastResponse = { data: sessionDraft, analysis, divinePatternAnalysis };
+  renderPlan(sessionDraft, analysis, divinePatternAnalysis);
 });
 
 clearButton.addEventListener("click", clearSession);
@@ -484,7 +496,7 @@ function getConfidence(weightedPatternScore, detectedPatternCount, matchCount) {
   };
 }
 
-function renderPlan(data, analysis) {
+function renderPlan(data, analysis, divinePatternAnalysis) {
   const voice = voiceProfiles[data.voice] || voiceProfiles["Thoughtful pastor"];
   const scriptures = buildScriptureSelection(analysis);
   const nextStep = buildHumanNextStep(analysis);
@@ -503,6 +515,7 @@ function renderPlan(data, analysis) {
       </div>
     </div>
     ${section("Pastoral Reading", "Pastoral wisdom", buildPastoralReading(data, analysis, voice))}
+    ${section("Divine Pattern Layer", "Pastoral pattern summary", buildDivinePatternLayer(divinePatternAnalysis))}
     ${analysis.possibleTheologicalDistortions.length ? section("Gentle Correction", "Scripture and pastoral wisdom", correctionBlock(analysis, voice)) : ""}
     ${section("Scripture with Context", "Scripture", scriptureList(scriptures))}
     ${section("Things You May Not Have Considered", "Discernment considerations", list(buildConsiderations(analysis)))}
@@ -514,6 +527,50 @@ function renderPlan(data, analysis) {
   `;
   result.classList.remove("hidden");
   result.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function buildDivinePatternLayer(divinePatternAnalysis) {
+  if (!divinePatternAnalysis) {
+    return "<p>Shepherd does not have enough pattern context to add this layer yet.</p>";
+  }
+
+  const summary = formatDivinePatternSummary(divinePatternAnalysis.summaryForShepherd);
+  const scriptureAnchor = divinePatternAnalysis.scriptureAnchor || {};
+  const pastoralRisk = divinePatternAnalysis.pastoralRisk || {};
+  const riskLevel = String(pastoralRisk.level || "low").toLowerCase();
+  const anchorText = scriptureAnchor.reference
+    ? `${scriptureAnchor.reference}: ${scriptureAnchor.rationale || "Hold this passage in context with prayer and wise counsel."}`
+    : "Hold Scripture in context with prayer and wise counsel.";
+  const cautionText = riskLevel === "high"
+    ? "A caution to hold carefully is that this may need trusted human support before it needs more private reflection. If danger, despair, coercion, or self-harm may be involved, contact emergency help, a crisis line, a pastor or priest, counselor, doctor, or another safe person now."
+    : `A caution to hold carefully is this: ${divinePatternAnalysis.guardrail}`;
+
+  return `
+    <p>One pattern Shepherd notices is ${escapeHtml(summary)}.</p>
+    <p>A helpful theological anchor may be ${escapeHtml(anchorText)}</p>
+    <p>${escapeHtml(cautionText)}</p>
+  `;
+}
+
+function formatDivinePatternSummary(summaryForShepherd) {
+  const summary = String(summaryForShepherd || "")
+    .split(".")
+    .map((sentence) => sentence.trim())
+    .filter((sentence) =>
+      sentence &&
+      !sentence.toLowerCase().startsWith("confidence:") &&
+      !sentence.toLowerCase().startsWith("pastoral risk:")
+    );
+  const patternSentence = summary.find((sentence) => sentence.toLowerCase().startsWith("possible divine pattern:"));
+
+  if (patternSentence) {
+    return patternSentence
+      .replace(/^possible divine pattern:\s*/i, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  return "a call to hold truth, mercy, Scripture, and wise human counsel together";
 }
 
 function buildPastoralReading(data, analysis, voice) {
