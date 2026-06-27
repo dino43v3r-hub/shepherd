@@ -42,10 +42,13 @@ function composeShepherdResponse({
     // prayer grounded in the user's need.
     shortPrayer: buildShortPrayer(understanding, discernment),
 
+    highRiskNotice: buildHighRiskNotice(discernment, divinePattern),
+
     meta: {
       voiceName,
       correctionTone: discernment.correctionTone,
       pastoralPriority: discernment.pastoralPriority,
+      safetyConcern: hasSafetyConcern(discernment, divinePattern),
       sourceLength: typeof userMessage === "string" ? userMessage.length : 0
     }
   };
@@ -152,6 +155,31 @@ function buildShortPrayer(understanding, discernment) {
   const growth = normalizeGrowthPhrase(discernment.growthOpportunities[0] || "faithful obedience");
 
   return `Lord Jesus Christ, have mercy on me. Give me ${need}. Correct what is false without crushing what is wounded. Lead me toward ${growth}, and keep me in the hope and care of your Church. Amen.`;
+}
+
+function buildHighRiskNotice(discernment, divinePattern) {
+  if (!hasSafetyConcern(discernment, divinePattern)) {
+    return "";
+  }
+
+  return "Because this touches despair, isolation, unsafe thinking, harm, or severe distress, do not carry it alone. If there is immediate danger, call emergency services now. In the United States, call or text 988 for suicide or crisis support. If abuse, violence, coercion, or self-harm may be involved, move toward a safe person and contact appropriate professional, pastoral, medical, or local crisis support today.";
+}
+
+function hasSafetyConcern(discernment, divinePattern) {
+  const risks = (discernment.spiritualRisks || []).join(" ").toLowerCase();
+  const priorities = (discernment.pastoralPriority || []).join(" ").toLowerCase();
+  const riskLevel = divinePattern && divinePattern.pastoralRisk
+    ? String(divinePattern.pastoralRisk.level || "").toLowerCase()
+    : "";
+
+  return riskLevel === "high"
+    || priorities.includes("human support")
+    || risks.includes("despair")
+    || risks.includes("unsafe")
+    || risks.includes("isolation")
+    || risks.includes("harm")
+    || risks.includes("violence")
+    || risks.includes("self-harm");
 }
 
 function buildSections(response) {

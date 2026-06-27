@@ -125,6 +125,47 @@ h4 {
   min-width: 0;
 }
 
+.safety-notice,
+.high-risk-notice {
+  border-radius: 8px;
+  line-height: 1.6;
+}
+
+.safety-notice {
+  padding: 18px 20px;
+  border: 1px solid #dac89e;
+  background: #fffaf0;
+}
+
+.safety-notice h2,
+.high-risk-notice h3 {
+  margin-bottom: 8px;
+}
+
+.safety-notice p,
+.high-risk-notice p {
+  margin: 8px 0 0;
+}
+
+.safety-notice p {
+  color: #4e4430;
+}
+
+.high-risk-notice {
+  margin: 18px 22px 0;
+  padding: 16px 18px;
+  border: 1px solid #efc3c3;
+  background: var(--danger-bg);
+}
+
+.high-risk-notice h3 {
+  color: var(--danger);
+}
+
+.high-risk-notice p {
+  color: #5d2a2a;
+}
+
 .panel,
 .result {
   background: var(--panel);
@@ -457,8 +498,13 @@ button {
 
   .panel,
   .result-section,
-  .result-header {
+  .result-header,
+  .high-risk-notice {
     padding: 16px;
+  }
+
+  .high-risk-notice {
+    margin: 14px 16px 0;
   }
 
   .segmented {

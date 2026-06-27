@@ -646,10 +646,20 @@ function renderPlan(data, composedResponse) {
         <button type="button" id="result-clear-button" class="secondary">Clear Everything</button>
       </div>
     </div>
+    ${composedResponse.highRiskNotice ? highRiskNotice(composedResponse.highRiskNotice) : ""}
     ${conversationSections(composedResponse.sections)}
   `;
   result.classList.remove("hidden");
   result.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function highRiskNotice(message) {
+  return `
+    <section class="high-risk-notice" role="alert" aria-label="Safety notice">
+      <h3>Before reading further</h3>
+      <p>${escapeHtml(message)}</p>
+    </section>
+  `;
 }
 
 function conversationSections(sections) {
@@ -1050,6 +1060,7 @@ function renderCrisisMessage() {
         <button type="button" id="result-clear-button" class="secondary">Clear Everything</button>
       </div>
     </div>
+    ${highRiskNotice("Because this may involve immediate danger, self-harm, abuse, violence, or severe crisis, do not use Shepherd as the next step. If there is immediate danger, call emergency services now. In the United States, call or text 988 for suicide or crisis support. Contact a safe person, pastor or priest, counselor, doctor, local crisis line, or appropriate professional support now.")}
     ${section("Please reach out now", "Caution / safety boundary", `
       <p>If there is immediate danger, call emergency services right now. In the United States, call or text 988 for the Suicide & Crisis Lifeline if self-harm, suicide, or severe crisis may be involved.</p>
       <p>Contact a trusted person, pastor or priest, counselor, doctor, local crisis line, or appropriate professional. If abuse or violence is involved, seek safety first and contact local emergency or abuse-support services.</p>
