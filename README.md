@@ -38,6 +38,26 @@ The user only selects:
 
 Shepherd does not ask extra follow-up questions or require the user to self-diagnose. The app infers the likely issue, focus, emotional and spiritual themes, and needed response type from the concern text.
 
+## Shepherd Understanding Engine
+
+Version 3 adds an internal first-pass engine:
+
+```js
+analyzeUnderstanding(userText, options)
+```
+
+The Understanding Engine runs before the discernment/correction layer, before Divine Pattern analysis, and before the selected voice shapes the visible response. It returns a transient structured object with:
+
+- `userMeaning`
+- `emotionsDetected`
+- `assumptionsDetected`
+- `deeperNeeds`
+- `biblicalThemes`
+- `pastoralStrategy`
+- `divinePatternEntry`
+
+This object helps Shepherd understand meaning, emotions, assumptions, deeper needs, biblical themes, pastoral strategy, and the Father / Son-Logos / Holy Spirit entry point before producing the final pastoral response. The full object is internal and is not shown to normal users.
+
 ## Discernment Engine
 
 Version 2 includes a static rule-based function:
@@ -67,9 +87,10 @@ The current in-browser flow is:
 
 ```text
 User input
--> transient Shepherd concern analysis
+-> transient Shepherd Understanding Engine
+-> transient discernment / correction analysis
 -> transient Divine Pattern analysis
--> Shepherd response with optional perspective lens
+-> selected Shepherd voice or perspective lens
 -> final visible response
 ```
 
@@ -97,6 +118,8 @@ When these appear, Shepherd should lovingly test the conclusion rather than simp
 ## Things You May Not Have Considered
 
 This section gives 3 to 5 observations about blind spots, possible assumptions, Scripture tensions, practical wisdom, or spiritual danger. It is meant to deepen discernment without creating dependence on the tool.
+
+The older generic reflection-question pattern has been replaced by this section so the response can surface assumptions and pastoral blind spots directly.
 
 ## Shepherd as Primary Guide
 
@@ -164,12 +187,15 @@ All analysis is transient and in memory while the page is open.
 
 Open `index.html` in a browser. No build step is required.
 
+Developer debug mode is available by adding `?debug` or `#debug` to the page URL. In that mode, Shepherd writes the internal Understanding Engine object, discernment analysis, and Divine Pattern analysis to the browser console for testing. Normal users do not see these objects in the page.
+
 ## Project Structure
 
 ```text
 Shepherd/
   index.html
   styles.css
+  understandingEngine.js
   app.js
   divine-pattern-engine.js
   README.md
@@ -178,7 +204,9 @@ Shepherd/
 ## Development Notes
 
 - `divine-pattern-engine.js` is dependency-free.
+- `understandingEngine.js` is dependency-free and must load before `app.js`.
 - Divine Pattern analysis is performed in memory only.
+- The Divine Pattern engine receives the Understanding Engine object as context and records its `divinePatternEntry` internally.
 - The UI displays only a short pastoral summary, not the raw analysis object.
 - Shepherd loads the Divine Pattern engine locally before `app.js`; it does not add a backend, API call, analytics call, database, or storage layer.
 - Divine remains separate from Shepherd.

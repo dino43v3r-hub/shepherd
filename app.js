@@ -1,6 +1,7 @@
 const form = document.querySelector("#reflection-form");
 const result = document.querySelector("#result");
 const clearButton = document.querySelector("#clear-button");
+const { analyzeUnderstanding } = window.ShepherdUnderstandingEngine;
 const { analyzeDivinePattern } = window.ShepherdDivinePatternEngine;
 
 // Privacy model:
@@ -8,6 +9,8 @@ const { analyzeDivinePattern } = window.ShepherdDivinePatternEngine;
 // User text lives only in browser memory while this page is open.
 let sessionDraft = null;
 let lastResponse = null;
+const developerDebugEnabled = new URLSearchParams(window.location.search).has("debug")
+  || window.location.hash.toLowerCase().includes("debug");
 
 const crisisTerms = [
   "suicide",
@@ -177,10 +180,24 @@ const theologicalDistortions = [
   },
   {
     id: "suffering_proves_failure",
-    patterns: ["my suffering proves i failed", "suffering means i failed", "god is punishing me because i failed"],
+    patterns: ["my suffering proves i failed", "suffering means i failed", "god is punishing me because i failed", "god is punishing me", "god must be punishing me", "punishing me"],
     correction: "Suffering can reveal many things, but Scripture does not let you reduce every sorrow to personal failure.",
     scripture: ["John 9:1-3", "Jesus rejects a simplistic link between suffering and personal blame."],
     responseTypes: ["comfort", "correction", "counsel"]
+  },
+  {
+    id: "worthless_identity",
+    patterns: ["i am worthless", "i'm worthless", "worthless", "god must be tired of me", "god is tired of me", "tired of me"],
+    correction: "Shepherd should gently reject the conclusion that you are worthless or that God is weary of you. Shame may feel authoritative, but it is not the voice that names your identity before God.",
+    scripture: ["Matthew 11:28-30", "Jesus invites the weary to come to him and learn his gentle yoke."],
+    responseTypes: ["comfort", "correction", "counsel"]
+  },
+  {
+    id: "forgiveness_resistance",
+    patterns: ["i don't want to forgive", "i do not want to forgive", "don't want to forgive", "do not want to forgive", "i refuse to forgive"],
+    correction: "The hurt should not be minimized, but resistance to forgiveness still needs to be brought honestly under Christ's mercy and command.",
+    scripture: ["Ephesians 4:31-32", "Paul roots Christian forgiveness in God's mercy while still calling evil by its proper name."],
+    responseTypes: ["correction", "repentance", "comfort", "practical"]
   },
   {
     id: "forgiveness_no_boundaries",
@@ -357,20 +374,27 @@ form.addEventListener("submit", (event) => {
     return;
   }
 
-  const analysis = analyzeConcern(sessionDraft.concern);
+  const understanding = analyzeUnderstanding(sessionDraft.concern, {
+    tradition: sessionDraft.tradition,
+    selectedVoice: sessionDraft.voice
+  });
+  const analysis = analyzeConcern(sessionDraft.concern, understanding);
   const selectedVoice = sessionDraft.voice;
   const shepherdContext = {
     tradition: sessionDraft.tradition,
     selectedVoice,
+    understanding,
     concernAnalysis: analysis
   };
   const divinePatternAnalysis = analyzeDivinePattern(sessionDraft.concern, {
     selectedVoice,
-    shepherdContext
+    shepherdContext,
+    understanding
   });
 
-  lastResponse = { data: sessionDraft, analysis, divinePatternAnalysis };
-  renderPlan(sessionDraft, analysis, divinePatternAnalysis);
+  logDeveloperDebug({ understanding, analysis, divinePatternAnalysis });
+  lastResponse = { data: sessionDraft, understanding, analysis, divinePatternAnalysis };
+  renderPlan(sessionDraft, understanding, analysis, divinePatternAnalysis);
 });
 
 clearButton.addEventListener("click", clearSession);
@@ -385,7 +409,7 @@ result.addEventListener("click", (event) => {
   }
 
   if (event.target.id === "compare-button" && lastResponse) {
-    renderVoiceComparison(lastResponse.data, lastResponse.analysis);
+    renderVoiceComparison(lastResponse.data, lastResponse.understanding, lastResponse.analysis);
   }
 });
 
@@ -402,7 +426,7 @@ function containsCrisisLanguage(text) {
   return crisisTerms.some((term) => normalized.includes(term));
 }
 
-function analyzeConcern(userText) {
+function analyzeConcern(userText, understanding = null) {
   const lower = userText.toLowerCase();
   const matches = concernSignals
     .map((signal) => ({
@@ -444,6 +468,7 @@ function analyzeConcern(userText) {
   const responseTypes = [
     ...primary.responseTypes,
     ...theological.flatMap((item) => item.responseTypes),
+    ...(understanding ? mapStrategiesToResponseTypes(understanding.pastoralStrategy) : []),
     ...(cognitive.some((item) => ["all_or_nothing", "fear_led"].includes(item.id)) ? ["correction"] : []),
     ...(medicalOrMentalHealth ? ["counsel", "practical"] : [])
   ];
@@ -452,18 +477,58 @@ function analyzeConcern(userText) {
   const weightedPatternScore = primary.score + theological.length * 2 + cognitive.length + (medicalOrMentalHealth ? 1 : 0);
 
   return {
-    likelyEmotions: unique(emotionHits).slice(0, 5),
+    likelyEmotions: unique([
+      ...emotionHits,
+      ...(understanding ? understanding.emotionsDetected.primary : []),
+      ...(understanding ? understanding.emotionsDetected.secondary : [])
+    ]).slice(0, 5),
     possibleSpiritualIssue: primary.issue,
     possibleCognitiveDistortions: cognitive,
     possibleTheologicalDistortions: theological,
     responseTypes: unique(responseTypes).slice(0, 6),
     confidence: getConfidence(weightedPatternScore, detectedPatternCount, matches.length),
     focus: primary.focus,
-    themes: unique([...primary.themes, ...matches.flatMap((item) => item.themes)]).slice(0, 6),
+    themes: unique([
+      ...primary.themes,
+      ...matches.flatMap((item) => item.themes),
+      ...(understanding ? understanding.biblicalThemes : [])
+    ]).slice(0, 6),
     overlaps: matches.slice(1, 3).map((item) => item.issue),
     medicalOrMentalHealth,
     hasHarmLanguage: primary.focus === "harm" || lower.includes("abuse") || lower.includes("unsafe")
   };
+}
+
+function mapStrategiesToResponseTypes(pastoralStrategy = {}) {
+  const strategies = [pastoralStrategy.primary, ...(pastoralStrategy.supporting || [])].join(" ").toLowerCase();
+  const mapped = [];
+
+  if (strategies.includes("comfort")) {
+    mapped.push("comfort");
+  }
+  if (strategies.includes("correction")) {
+    mapped.push("correction");
+  }
+  if (strategies.includes("warning")) {
+    mapped.push("warning");
+  }
+  if (strategies.includes("encouragement")) {
+    mapped.push("encouragement");
+  }
+  if (strategies.includes("repentance")) {
+    mapped.push("repentance");
+  }
+  if (strategies.includes("practical")) {
+    mapped.push("practical");
+  }
+  if (strategies.includes("referral")) {
+    mapped.push("counsel", "practical");
+  }
+  if (strategies.includes("teaching") || strategies.includes("reflection")) {
+    mapped.push("counsel");
+  }
+
+  return mapped;
 }
 
 function detectEmotions(lower, primary, matches) {
@@ -502,7 +567,19 @@ function getConfidence(weightedPatternScore, detectedPatternCount, matchCount) {
   };
 }
 
-function renderPlan(data, analysis, divinePatternAnalysis) {
+function logDeveloperDebug(payload) {
+  if (!developerDebugEnabled) {
+    return;
+  }
+
+  console.group("Shepherd developer debug");
+  console.log("Understanding object", payload.understanding);
+  console.log("Discernment / correction analysis", payload.analysis);
+  console.log("Divine Pattern analysis", payload.divinePatternAnalysis);
+  console.groupEnd();
+}
+
+function renderPlan(data, understanding, analysis, divinePatternAnalysis) {
   const voice = voiceProfiles[data.voice] || voiceProfiles["Shepherd"];
   const scriptures = buildScriptureSelection(analysis);
   const nextStep = buildHumanNextStep(analysis);
@@ -521,13 +598,13 @@ function renderPlan(data, analysis, divinePatternAnalysis) {
         <button type="button" id="result-clear-button" class="secondary">Clear Everything</button>
       </div>
     </div>
-    ${section("Pastoral Reading", "Pastoral wisdom", buildPastoralReading(data, analysis, voice))}
+    ${section("Pastoral Reading", "Pastoral wisdom", buildPastoralReading(data, understanding, analysis, voice))}
     ${section("Divine Pattern Layer", "Pastoral pattern summary", buildDivinePatternLayer(divinePatternAnalysis))}
     ${analysis.possibleTheologicalDistortions.length ? section("Gentle Correction", "Scripture and pastoral wisdom", correctionBlock(analysis, voice)) : ""}
     ${section("Scripture with Context", "Scripture", scriptureList(scriptures))}
-    ${section("Things You May Not Have Considered", "Discernment considerations", list(buildConsiderations(analysis)))}
+    ${section("Things You May Not Have Considered", "Discernment considerations", list(buildConsiderations(analysis, understanding)))}
     ${section("Christian Tradition Perspective", "Christian tradition summary", `<p>${escapeHtml(traditionPerspectives[data.tradition])}</p>`)}
-    ${section("Suggested Prayer", "Pastoral wisdom", `<p>${escapeHtml(buildPrayer(data, analysis, voice))}</p>`)}
+    ${section("Suggested Prayer", "Pastoral wisdom", `<p>${escapeHtml(buildPrayer(data, understanding, analysis, voice))}</p>`)}
     ${section("Recommended Human Next Step", "Caution / safety boundary", `<p>${escapeHtml(nextStep)}</p>`)}
     ${section("Boundaries and Cautions", "Caution / safety boundary", list(buildBoundaries(analysis)))}
   `;
@@ -579,7 +656,7 @@ function formatDivinePatternSummary(summaryForShepherd) {
   return "a call to hold truth, mercy, Scripture, and wise human counsel together";
 }
 
-function buildPastoralReading(data, analysis, voice) {
+function buildPastoralReading(data, understanding, analysis, voice) {
   const responseText = analysis.responseTypes.map((type) => responseTypeLabels[type] || type).join(", ");
   const emotionText = analysis.likelyEmotions.length
     ? `Shepherd hears ${joinHumanList(analysis.likelyEmotions)} in what you wrote.`
@@ -587,12 +664,21 @@ function buildPastoralReading(data, analysis, voice) {
   const overlapText = analysis.overlaps.length
     ? `There may also be overlap with ${joinHumanList(analysis.overlaps)}.`
     : "No strong secondary issue was clear from the wording.";
+  const meaningText = understanding.userMeaning.summary;
+  const needText = understanding.deeperNeeds.length
+    ? `Beneath the surface, this may call for ${joinHumanList(understanding.deeperNeeds.slice(0, 4))}.`
+    : "Beneath the surface, this needs prayer, humility, and wise counsel.";
+  const strategyText = [
+    understanding.pastoralStrategy.primary,
+    ...understanding.pastoralStrategy.supporting
+  ].filter(Boolean).join(", ");
 
   return `
-    <p>${escapeHtml(emotionText)} The likely spiritual or pastoral issue is ${escapeHtml(analysis.possibleSpiritualIssue)}. ${escapeHtml(overlapText)}</p>
+    <p>${escapeHtml(meaningText)} ${escapeHtml(emotionText)} ${escapeHtml(needText)}</p>
+    <p>The likely spiritual or pastoral issue is ${escapeHtml(analysis.possibleSpiritualIssue)}. ${escapeHtml(overlapText)}</p>
     <p>${escapeHtml(voiceProfiles["Shepherd"].comfort)} ${escapeHtml(voiceProfiles["Shepherd"].challenge)}</p>
     ${data.voice === "Shepherd" ? "" : `<p>${escapeHtml(buildPerspectiveLine(data.voice, voice))}</p>`}
-    <p>The response seems to call for ${escapeHtml(responseText)} rather than simple affirmation. Shepherd should help you test what is true, receive what is merciful, and take one faithful human next step.</p>
+    <p>The response seems to call for ${escapeHtml(responseText)} rather than simple affirmation. In pastoral strategy terms: ${escapeHtml(strategyText)}. Shepherd should help you test what is true, receive what is merciful, and take one faithful human next step.</p>
   `;
 }
 
@@ -623,8 +709,14 @@ function buildScriptureSelection(analysis) {
   return [...theologicalScriptures, ...base].slice(0, 3);
 }
 
-function buildConsiderations(analysis) {
+function buildConsiderations(analysis, understanding = null) {
   const considerations = [];
+
+  if (understanding) {
+    understanding.assumptionsDetected.forEach((assumption) => {
+      considerations.push(`${assumption.statement} ${assumption.pastoralNote}`);
+    });
+  }
 
   analysis.possibleTheologicalDistortions.forEach((distortion) => {
     considerations.push(distortion.correction);
@@ -703,12 +795,13 @@ function buildConsiderations(analysis) {
   return unique(considerations).slice(0, 5);
 }
 
-function buildPrayer(data, analysis, voice) {
+function buildPrayer(data, understanding, analysis, voice) {
   const lensRequest = data.voice === "Shepherd"
     ? "Give me truth and mercy"
     : `Let this ${data.voice} perspective serve truth and mercy`;
+  const need = understanding.deeperNeeds[0] || analysis.possibleSpiritualIssue;
 
-  return `Lord Jesus, meet me with truth and mercy. Help me name ${analysis.possibleSpiritualIssue} without panic or self-deception. ${lensRequest}, Scripture held in context, and courage to seek wise human help. Amen.`;
+  return `Lord Jesus, meet me with truth and mercy. Help me name ${analysis.possibleSpiritualIssue} without panic or self-deception, and give me ${need}. ${lensRequest}, Scripture held in context, and courage to seek wise human help. Amen.`;
 }
 
 function buildHumanNextStep(analysis) {
@@ -739,7 +832,7 @@ function buildHumanNextStep(analysis) {
   return "Share a brief, honest version of this with one trusted pastor, priest, mature Christian, counselor, doctor, mentor, or wise friend this week.";
 }
 
-function renderVoiceComparison(data, analysis) {
+function renderVoiceComparison(data, understanding, analysis) {
   const selected = ["Paul", "Augustine", "Bonhoeffer"].includes(data.voice)
     ? ["Spurgeon", "C.S. Lewis", "Thoughtful pastor"]
     : ["Paul", "Augustine", "Bonhoeffer"];
@@ -765,6 +858,7 @@ function renderVoiceComparison(data, analysis) {
       <div id="voice-comparison">
         <div class="compare-grid">${comparisons}</div>
         <p><strong>Where they agree:</strong> ${escapeHtml(buildAgreementLine(analysis))}</p>
+        <p><strong>What Shepherd understood first:</strong> ${escapeHtml(understanding.userMeaning.summary)}</p>
         <p><strong>Where they differ:</strong> They would place different weight on assurance, desire, moral clarity, costly obedience, tenderness, or practical counsel.</p>
       </div>
     `

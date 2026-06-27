@@ -158,7 +158,7 @@ const PASTORAL_RISK_TERMS = [
 function analyzeDivinePattern(inputText, options = {}) {
   const text = normalizeInput(inputText);
   const optionScope = normalizeOptions(options);
-  const scoredPatterns = scorePatterns(text);
+  const scoredPatterns = scorePatterns(text, optionScope.understanding);
   const primaryPattern = scoredPatterns[0] || buildFallbackPattern();
   const warnings = detectWarnings(text, primaryPattern);
   const pastoralRisk = assessPastoralRisk(text, warnings);
@@ -174,6 +174,9 @@ function analyzeDivinePattern(inputText, options = {}) {
     theologicalAnchor: primaryPattern.theologicalAnchor,
     trinitarianLens: primaryPattern.trinitarianLens,
     creationFallRedemptionConsummation: primaryPattern.cfrc,
+    understandingEntry: optionScope.understanding
+      ? optionScope.understanding.divinePatternEntry
+      : null,
     distortionWarnings: warnings,
     pastoralRisk,
     confidenceScore,
@@ -204,23 +207,74 @@ function normalizeOptions(options) {
 
   return {
     tradition: typeof options.tradition === "string" ? options.tradition : "General Christian",
-    sensitivity: typeof options.sensitivity === "string" ? options.sensitivity : "balanced"
+    sensitivity: typeof options.sensitivity === "string" ? options.sensitivity : "balanced",
+    understanding: options.understanding && typeof options.understanding === "object"
+      ? options.understanding
+      : options.shepherdContext && typeof options.shepherdContext.understanding === "object"
+        ? options.shepherdContext.understanding
+        : null
   };
 }
 
-function scorePatterns(text) {
+function scorePatterns(text, understanding) {
+  const understandingTerms = buildUnderstandingTerms(understanding);
+
   return PATTERN_SIGNALS
     .map((pattern) => {
-      const matchedSignals = pattern.keywords.filter((keyword) => text.includes(keyword));
+      const matchedSignals = pattern.keywords.filter((keyword) =>
+        text.includes(keyword) || understandingTerms.includes(keyword)
+      );
+      const understandingBoost = scoreUnderstandingBoost(pattern, understanding);
 
       return {
         ...pattern,
         matchedSignals,
-        score: matchedSignals.length
+        score: matchedSignals.length + understandingBoost
       };
     })
     .filter((pattern) => pattern.score > 0)
     .sort((a, b) => b.score - a.score);
+}
+
+function buildUnderstandingTerms(understanding) {
+  if (!understanding) {
+    return [];
+  }
+
+  return [
+    ...(understanding.emotionsDetected ? understanding.emotionsDetected.primary || [] : []),
+    ...(understanding.emotionsDetected ? understanding.emotionsDetected.secondary || [] : []),
+    ...(understanding.biblicalThemes || []),
+    ...(understanding.deeperNeeds || [])
+  ].map((term) => String(term).toLowerCase());
+}
+
+function scoreUnderstandingBoost(pattern, understanding) {
+  if (!understanding || !understanding.divinePatternEntry) {
+    return 0;
+  }
+
+  const primaryEntry = String(understanding.divinePatternEntry.primaryEntry || "").toLowerCase();
+  const themes = (understanding.biblicalThemes || []).join(" ").toLowerCase();
+  let boost = 0;
+
+  if (primaryEntry.includes("spirit") && ["conviction_to_mercy", "isolation_to_communion"].includes(pattern.id)) {
+    boost += 1;
+  }
+  if (primaryEntry.includes("son") && ["lament_to_trust", "fear_to_wise_trust"].includes(pattern.id)) {
+    boost += 1;
+  }
+  if (primaryEntry.includes("father") && ["harm_to_protection", "conviction_to_mercy"].includes(pattern.id)) {
+    boost += 1;
+  }
+  if (themes.includes("forgiveness") && pattern.id === "conviction_to_mercy") {
+    boost += 1;
+  }
+  if (themes.includes("suffering") && pattern.id === "lament_to_trust") {
+    boost += 1;
+  }
+
+  return boost;
 }
 
 function detectWarnings(text, primaryPattern) {
