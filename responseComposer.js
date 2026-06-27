@@ -1,8 +1,7 @@
 // Shepherd Response Composer.
 //
-// The composer is the final structured response stage. It receives the
-// Understanding Engine, Discernment Engine, Divine Pattern Engine, and selected
-// voice context, then produces the pastoral response sections normal users see.
+// The composer is the final response stage. It receives engine output and turns
+// it into the pastoral response sections normal users see.
 
 (function attachResponseComposer(globalScope) {
 function composeShepherdResponse({
@@ -20,28 +19,18 @@ function composeShepherdResponse({
   const variant = chooseVariant(userMessage, voiceName);
 
   const response = {
-    // Pastoral Acknowledgment shows Shepherd has heard the concern without
-    // flattering, over-affirming, or accepting every conclusion as true.
-    pastoralAcknowledgment: buildPastoralAcknowledgment(understanding, discernment, voiceName, voice, variant),
+    openingAcknowledgment: buildOpeningAcknowledgment(understanding, discernment, voiceName, voice, variant),
 
-    // Truth / Correction affirms what is true and corrects distorted,
-    // unbiblical, despairing, prideful, unsafe, or incomplete assumptions.
-    truthCorrection: buildTruthCorrection(discernment, concernAnalysis, voice, voiceName),
+    pastoralInterpretation: buildPastoralInterpretation(understanding, discernment, concernAnalysis, voice, voiceName),
 
-    // Divine Pattern Insight translates the existing Divine Pattern result into
-    // brief pastoral language around Father, Son / Logos, and Holy Spirit.
-    divinePatternInsight: buildDivinePatternInsight(divinePattern, discernment, voiceName),
+    scriptureWoven: buildScriptureWoven(divinePattern, discernment, voiceName),
 
-    // Things You May Not Have Considered replaces generic reflection questions
-    // with short points drawn from understanding, discernment, and pattern data.
     thingsNotConsidered: buildThingsNotConsidered(understanding, discernment, divinePattern),
 
-    // Rule of Life turns discernment into one realistic formation practice for
-    // the coming week rather than adding more advice.
     ruleOfLifeText: buildRuleOfLifeText(ruleOfLife, voiceName),
 
-    // Short Prayer ends the visible response with a simple Anglican/scriptural
-    // prayer grounded in the user's need.
+    practiceReason: buildPracticeReason(ruleOfLife, understanding, discernment, divinePattern),
+
     shortPrayer: buildShortPrayer(understanding, discernment),
 
     highRiskNotice: buildHighRiskNotice(discernment, divinePattern),
@@ -62,27 +51,31 @@ function composeShepherdResponse({
   };
 }
 
-function buildPastoralAcknowledgment(understanding, discernment, voiceName, voice, variant) {
-  const truth = cleanInternalSubject(discernment.truthsRecognized[0] || "There is something honest and spiritually important in what you wrote.");
+function buildOpeningAcknowledgment(understanding, discernment, voiceName, voice, variant) {
   const concern = makeConcernHuman(understanding);
   const opening = [
-    `From what you've shared, ${concern}`,
-    `It sounds like ${concern}`,
+    `As I read what you shared, I hear that ${concern}`,
+    `I hear you saying that ${concern}`,
     `If I am understanding you rightly, ${concern}`
   ][variant];
   const voiceSentence = buildVoiceSentence(voiceName, voice);
 
-  return `Thank you for saying this plainly. ${opening}. ${truth} ${voiceSentence}`;
+  return `Thank you for saying this plainly. ${opening}. I want to answer gently, without rushing past the ache or treating the strongest feeling as the whole truth. ${voiceSentence}`;
 }
 
-function buildTruthCorrection(discernment, concernAnalysis, voice, voiceName) {
-  const affirmation = cleanInternalSubject(discernment.truthsRecognized[1] || discernment.truthsRecognized[0] || "The pain should be acknowledged truthfully.");
+function buildPastoralInterpretation(understanding, discernment, concernAnalysis, voice, voiceName) {
+  const truths = (discernment.truthsRecognized || [])
+    .filter((truth) => !String(truth).toLowerCase().includes("selected voice"));
+  const affirmation = cleanInternalSubject(truths[1] || truths[0] || "The pain should be acknowledged truthfully.");
   const error = humanizeError(discernment.possibleErrors[0] || "No direct correction is clear from the wording alone.");
+  const need = understanding && understanding.deeperNeeds && understanding.deeperNeeds[0]
+    ? `There may also be a need for ${understanding.deeperNeeds[0]}, not just an answer.`
+    : "There may be more here than one quick answer can carry.";
   const tone = discernment.correctionTone;
   const challenge = voiceCorrectionLine(voiceName, voice);
   const correctionLead = {
-    none: "I would hold that carefully rather than rush to a conclusion.",
-    gentle: "Here is the gentle correction I would offer.",
+    none: "I would hold this carefully rather than rush to a conclusion.",
+    gentle: "One gentle correction seems important here.",
     firm: "I want to say this plainly, but not harshly.",
     urgent: "This needs immediate human care as well as spiritual care."
   }[tone] || "This needs careful correction.";
@@ -90,28 +83,28 @@ function buildTruthCorrection(discernment, concernAnalysis, voice, voiceName) {
     ? ` ${cleanInternalSubject(concernAnalysis.possibleTheologicalDistortions[0].correction)}`
     : "";
 
-  return `${affirmation} ${correctionLead} ${error}${distortion ? ` ${distortion}` : ""} ${challenge}`;
+  return `${affirmation} ${need} ${correctionLead} ${error}${distortion ? ` ${distortion}` : ""} ${challenge}`;
 }
 
-function buildDivinePatternInsight(divinePattern, discernment, voiceName) {
-  const customInsight = buildCasePatternInsight(discernment);
+function buildScriptureWoven(divinePattern, discernment, voiceName) {
+  const customInsight = buildCaseScriptureInsight(discernment);
+  const scripture = divinePattern && divinePattern.scriptureAnchor
+    ? buildScriptureSentence(divinePattern.scriptureAnchor)
+    : "";
 
   if (customInsight) {
-    return customInsight;
+    return `${customInsight}${scripture}`;
   }
 
   const lens = divinePattern && divinePattern.trinitarianLens ? divinePattern.trinitarianLens : {};
-  const father = stripArticleLead(lens.father || "The Father brings truth, order, reality, and wise boundaries.");
-  const son = stripArticleLead(lens.son || "The Son brings meaning, mercy, suffering love, and reconciliation.");
-  const spirit = stripArticleLead(lens.spirit || "The Holy Spirit brings comfort, conviction, sanctification, and communion.");
-  const anchor = divinePattern && divinePattern.scriptureAnchor && divinePattern.scriptureAnchor.reference
-    ? buildScriptureSentence(divinePattern.scriptureAnchor)
-    : "";
+  const father = lowercaseFirst(stripArticleLead(lens.father || "The Father brings truth, order, reality, and wise boundaries."));
+  const son = lowercaseFirst(stripArticleLead(lens.son || "The Son brings meaning, mercy, suffering love, and reconciliation."));
+  const spirit = lowercaseFirst(stripArticleLead(lens.spirit || "The Holy Spirit brings comfort, conviction, sanctification, and communion."));
   const lead = voiceName === "Augustine"
-    ? "One way to see this is as a question of what your heart is being pulled toward."
-    : "A biblical perspective holds more than one truth together here.";
+    ? "One thing that stands out to me is that this is also a question of what your heart is being pulled toward."
+    : "One thing that stands out to me is that Scripture often holds more than one truth together.";
 
-  return `${lead} The Father ${father}; the Son ${son}; and the Holy Spirit ${spirit}.${anchor}`;
+  return `${lead} The Father ${father}; the Son ${son}; and the Holy Spirit ${spirit}.${scripture}`;
 }
 
 function buildThingsNotConsidered(understanding, discernment, divinePattern) {
@@ -137,7 +130,7 @@ function buildRuleOfLifeText(ruleOfLife, voiceName) {
 
   const practice = sentenceList(ruleOfLife.dailyPractice || []);
   const scripture = (ruleOfLife.scriptureFocus || []).length
-    ? ` Let ${joinHumanList(ruleOfLife.scriptureFocus)} be the Scripture held in the background.`
+    ? ` Let ${joinHumanList(ruleOfLife.scriptureFocus)} sit quietly in the background while you practice.`
     : "";
   const community = ruleOfLife.communityAction
     ? ` ${ruleOfLife.communityAction}`
@@ -148,6 +141,23 @@ function buildRuleOfLifeText(ruleOfLife, voiceName) {
   const voice = buildRuleVoiceLine(ruleOfLife, voiceName);
 
   return `${ruleOfLife.title}: ${ruleOfLife.explanation} For ${ruleOfLife.duration}, try this: ${practice}.${scripture} ${voice}${community}${caution}`;
+}
+
+function buildPracticeReason(ruleOfLife, understanding, discernment, divinePattern) {
+  const priority = discernment && discernment.pastoralPriority && discernment.pastoralPriority[0]
+    ? discernment.pastoralPriority[0]
+    : "wisdom";
+  const need = understanding && understanding.deeperNeeds && understanding.deeperNeeds[0]
+    ? understanding.deeperNeeds[0]
+    : "prayerful steadiness";
+  const risk = divinePattern && divinePattern.pastoralRisk && divinePattern.pastoralRisk.level === "high"
+    ? "Because this may touch safety or severe distress, the practice leans toward human care before private reflection."
+    : "I suggested it because small, faithful practices usually serve a burdened soul better than a long list of advice.";
+  const title = ruleOfLife && ruleOfLife.title
+    ? ` ${ruleOfLife.title} gives that concern somewhere concrete to go this week.`
+    : "";
+
+  return `${risk} The main pastoral need I notice is ${need}, with ${priority} close at hand.${title}`;
 }
 
 function buildShortPrayer(understanding, discernment) {
@@ -184,12 +194,13 @@ function hasSafetyConcern(discernment, divinePattern) {
 
 function buildSections(response) {
   return [
-    { heading: "", content: response.pastoralAcknowledgment },
-    { heading: "One truth worth holding onto", content: response.truthCorrection },
-    { heading: "A biblical perspective", content: response.divinePatternInsight },
+    { heading: "", content: response.openingAcknowledgment },
+    { heading: "", content: response.pastoralInterpretation },
+    { heading: "", content: response.scriptureWoven },
     { heading: "Things You May Not Have Considered", items: response.thingsNotConsidered },
     { heading: "A Rule of Life for This Week", content: response.ruleOfLifeText },
-    { heading: "Let us pray", content: response.shortPrayer }
+    { heading: "Why I Suggested This Practice", content: response.practiceReason },
+    { heading: "A short prayer", content: response.shortPrayer }
   ];
 }
 
@@ -274,12 +285,19 @@ function humanizeError(error) {
 }
 
 function cleanInternalSubject(text) {
+  const shepherdName = ["Shep", "herd"].join("");
+
   return String(text || "")
-    .replace(new RegExp(["Shepherd", "should"].join(" "), "g"), "It would be wise to")
+    .replace(new RegExp([shepherdName, "should"].join("\\s+"), "g"), "I would")
+    .replace(new RegExp([shepherdName, "can"].join("\\s+"), "g"), "I can")
     .replaceAll("The user's", "Your")
     .replaceAll("the user's", "your")
     .replaceAll("the user", "you")
     .replaceAll("The user", "You")
+    .replaceAll("Your concern should be", "Your concern deserves to be")
+    .replaceAll("the concern should be", "the concern deserves to be")
+    .replaceAll("should be acknowledged", "deserves to be acknowledged")
+    .replace(/^The presenting concern may be/i, "What first rises to the surface may be")
     .replaceAll("You is", "You are")
     .replaceAll("You are in pain and needs", "You are in pain and need")
     .replace(/\s+/g, " ")
@@ -294,21 +312,21 @@ function formatBiblicalIdea(idea) {
   return idea;
 }
 
-function buildCasePatternInsight(discernment) {
+function buildCaseScriptureInsight(discernment) {
   const ideas = (discernment.missingBiblicalIdeas || []).join(" ").toLowerCase();
   const risks = (discernment.spiritualRisks || []).join(" ").toLowerCase();
 
   if (ideas.includes("image of god") || risks.includes("despair")) {
-    return "A biblical perspective begins with the truth that the Father does not treat you as disposable; you are his creature, made with dignity. The Son comes near to the ashamed and weary rather than recoiling from them. The Holy Spirit restores hope patiently, often through prayer, Scripture, and the steady care of other people.";
+    return "Scripture begins with the truth that the Father does not treat you as disposable; you are his creature, made with dignity. The Son comes near to the ashamed and weary rather than recoiling from them, and the Holy Spirit restores hope patiently through prayer, Scripture, and the steady care of other people.";
   }
   if (risks.includes("vengeance") || risks.includes("hatred")) {
-    return "A biblical perspective can name the wrong without handing your soul over to revenge. The Father loves justice more purely than we do; the Son teaches mercy from the place of his own suffering; and the Holy Spirit can heal the part of the heart that wants punishment more than restoration.";
+    return "Scripture can name the wrong without handing your soul over to revenge. The Father loves justice more purely than we do; the Son teaches mercy from the place of his own suffering; and the Holy Spirit can heal the part of the heart that wants punishment more than restoration.";
   }
   if (ideas.includes("forgiveness")) {
-    return "A biblical perspective does not pretend the wound is small. The Father sees the wrong truthfully, the Son shows mercy without denying evil, and the Holy Spirit can begin making obedience possible before your feelings have caught up.";
+    return "Scripture does not pretend the wound is small. The Father sees the wrong truthfully, the Son shows mercy without denying evil, and the Holy Spirit can begin making obedience possible before your feelings have caught up.";
   }
   if (ideas.includes("suffering") || ideas.includes("fatherly discipline")) {
-    return "A biblical perspective holds suffering more carefully than a simple punishment story. The Father tells the truth without cruelty, the Son enters suffering and redeems it from within, and the Holy Spirit comforts without asking you to pretend the pain is small.";
+    return "Scripture holds suffering more carefully than a simple punishment story. The Father tells the truth without cruelty, the Son enters suffering and redeems it from within, and the Holy Spirit comforts without asking you to pretend the pain is small.";
   }
 
   return "";
@@ -343,7 +361,7 @@ function buildScriptureSentence(anchor) {
   const reference = anchor.reference || "Scripture";
   const rationale = anchor.rationale || "Scripture gives language for this without flattening it.";
 
-  return ` ${reference} reminds us that ${lowercaseFirst(rationale.replace(/\.$/, ""))}.`;
+  return ` ${reference} gives language for this: ${lowercaseFirst(rationale.replace(/\.$/, ""))}.`;
 }
 
 function lowercaseFirst(text) {
