@@ -33,7 +33,7 @@ It is not a replacement for:
 The user only selects:
 
 1. Christian tradition
-2. Pastoral / theological voice
+2. Primary guide
 3. Their concern or problem
 
 Shepherd does not ask extra follow-up questions or require the user to self-diagnose. The app infers the likely issue, focus, emotional and spiritual themes, and needed response type from the concern text.
@@ -53,9 +53,9 @@ It detects possible:
 - Cognitive distortion
 - Theological distortion
 - Needed response type, such as comfort, correction, warning, encouragement, repentance, boundaries, counsel, or practical next steps
-- Confidence level: high, moderate, or low
+- Internal confidence level for humble weighting
 
-The analysis shapes the final reflection, but the app avoids presenting it as a cold diagnostic report. Confidence language stays humble and non-clinical.
+The analysis shapes the final reflection, but the app avoids presenting it as a cold diagnostic report and does not expose confidence internals.
 
 ## Divine Pattern Layer
 
@@ -69,7 +69,7 @@ The current in-browser flow is:
 User input
 -> transient Shepherd concern analysis
 -> transient Divine Pattern analysis
--> selected voice response
+-> Shepherd response with optional perspective lens
 -> final visible response
 ```
 
@@ -98,21 +98,22 @@ When these appear, Shepherd should lovingly test the conclusion rather than simp
 
 This section gives 3 to 5 observations about blind spots, possible assumptions, Scripture tensions, practical wisdom, or spiritual danger. It is meant to deepen discernment without creating dependence on the tool.
 
-## Voice-Shaped Reasoning
+## Shepherd as Primary Guide
 
-The selected voice changes reasoning emphasis, not just tone.
+Shepherd is the primary guide by default. Other voices remain available as optional perspectives that can shape emphasis, but they do not become the identity of the app or pretend to speak as a historical figure.
 
-Current voices:
+Current guide and perspectives:
 
+- Shepherd: truth, mercy, Scripture in context, wise human counsel, one faithful next step
+- Thoughtful pastor: balanced pastoral care
+- Trusted Christian friend: warm but honest companionship
 - Paul: grace, union with Christ, endurance, correction, community
 - Augustine: disordered loves, confession, restlessness, desire
 - C.S. Lewis: imagination, reason, pride, humility, moral clarity
 - Bonhoeffer: costly obedience, community, discipleship, action
 - Spurgeon: comfort, hope, tenderness, gospel assurance
-- Thoughtful pastor: balanced pastoral care
-- Trusted Christian friend: warm but honest companionship
 
-Each voice can comfort, challenge, and disagree with the user's conclusion when needed.
+Each perspective can comfort, challenge, and disagree with the user's conclusion when needed, while Shepherd remains the main guide.
 
 ## Dynamic Human Next Steps
 
@@ -126,11 +127,11 @@ The recommended next step changes based on the detected issue:
 - Loneliness or isolation: one trusted person this week
 - Medical or mental health language: doctor or counselor plus pastoral support
 
-## Compare Faithful Perspectives
+## Additional Faithful Perspectives
 
 After the first response, Shepherd offers:
 
-> Compare faithful perspectives
+> Additional Faithful Perspectives
 
 This shows three brief responses from different voices, then names where they agree and how they differ. The goal is to teach discernment, not dependence on AI.
 

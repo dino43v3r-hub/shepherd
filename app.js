@@ -42,6 +42,12 @@ const traditionPerspectives = {
 };
 
 const voiceProfiles = {
+  "Shepherd": {
+    emphasis: "truth, mercy, Scripture in context, wise human counsel, and one faithful next step",
+    comfort: "Shepherd holds this first with the mercy of Christ, without rushing past the pain or letting the pain become the whole story.",
+    challenge: "Shepherd should test the strongest conclusion by Scripture, prayer, wise counsel, and the fruit it is likely to bear.",
+    compare: "Shepherd keeps the main response centered on truth, mercy, Scripture in context, wise human counsel, and one faithful next step."
+  },
   "Paul": {
     emphasis: "grace, union with Christ, endurance, correction, and community",
     comfort: "Your pain should be brought under the mercy of Christ, not treated as proof that grace has failed.",
@@ -497,9 +503,10 @@ function getConfidence(weightedPatternScore, detectedPatternCount, matchCount) {
 }
 
 function renderPlan(data, analysis, divinePatternAnalysis) {
-  const voice = voiceProfiles[data.voice] || voiceProfiles["Thoughtful pastor"];
+  const voice = voiceProfiles[data.voice] || voiceProfiles["Shepherd"];
   const scriptures = buildScriptureSelection(analysis);
   const nextStep = buildHumanNextStep(analysis);
+  const isPrimaryShepherd = data.voice === "Shepherd";
 
   form.classList.add("hidden");
   result.className = "result";
@@ -507,10 +514,10 @@ function renderPlan(data, analysis, divinePatternAnalysis) {
     <div class="result-header">
       <h2>Your discernment draft</h2>
       <p>This is a static, in-browser Christian reflection. It is meant to prepare you for prayer, Scripture, and human care.</p>
-      <p class="fine-print">Voice: ${escapeHtml(data.voice)}. Emphasis: ${escapeHtml(voice.emphasis)}.</p>
+      <p class="fine-print">${escapeHtml(isPrimaryShepherd ? "Primary guide" : "Primary guide: Shepherd. Perspective lens")}: ${escapeHtml(data.voice)}. Emphasis: ${escapeHtml(voice.emphasis)}.</p>
       <div class="result-actions">
         <button type="button" id="print-button" class="primary">Print / Save as PDF</button>
-        <button type="button" id="compare-button" class="secondary">Compare faithful perspectives</button>
+        <button type="button" id="compare-button" class="secondary">Additional Faithful Perspectives</button>
         <button type="button" id="result-clear-button" class="secondary">Clear Everything</button>
       </div>
     </div>
@@ -519,7 +526,6 @@ function renderPlan(data, analysis, divinePatternAnalysis) {
     ${analysis.possibleTheologicalDistortions.length ? section("Gentle Correction", "Scripture and pastoral wisdom", correctionBlock(analysis, voice)) : ""}
     ${section("Scripture with Context", "Scripture", scriptureList(scriptures))}
     ${section("Things You May Not Have Considered", "Discernment considerations", list(buildConsiderations(analysis)))}
-    ${section("Discernment Confidence", "Pastoral wisdom", buildConfidenceNote(analysis))}
     ${section("Christian Tradition Perspective", "Christian tradition summary", `<p>${escapeHtml(traditionPerspectives[data.tradition])}</p>`)}
     ${section("Suggested Prayer", "Pastoral wisdom", `<p>${escapeHtml(buildPrayer(data, analysis, voice))}</p>`)}
     ${section("Recommended Human Next Step", "Caution / safety boundary", `<p>${escapeHtml(nextStep)}</p>`)}
@@ -577,14 +583,15 @@ function buildPastoralReading(data, analysis, voice) {
   const responseText = analysis.responseTypes.map((type) => responseTypeLabels[type] || type).join(", ");
   const emotionText = analysis.likelyEmotions.length
     ? `Shepherd hears ${joinHumanList(analysis.likelyEmotions)} in what you wrote.`
-    : "Shepherd cannot confidently name the emotions yet.";
+    : "Shepherd cannot name the emotions yet from the wording alone.";
   const overlapText = analysis.overlaps.length
     ? `There may also be overlap with ${joinHumanList(analysis.overlaps)}.`
     : "No strong secondary issue was clear from the wording.";
 
   return `
     <p>${escapeHtml(emotionText)} The likely spiritual or pastoral issue is ${escapeHtml(analysis.possibleSpiritualIssue)}. ${escapeHtml(overlapText)}</p>
-    <p>${escapeHtml(voice.comfort)} ${escapeHtml(voice.challenge)}</p>
+    <p>${escapeHtml(voiceProfiles["Shepherd"].comfort)} ${escapeHtml(voiceProfiles["Shepherd"].challenge)}</p>
+    ${data.voice === "Shepherd" ? "" : `<p>${escapeHtml(buildPerspectiveLine(data.voice, voice))}</p>`}
     <p>The response seems to call for ${escapeHtml(responseText)} rather than simple affirmation. Shepherd should help you test what is true, receive what is merciful, and take one faithful human next step.</p>
   `;
 }
@@ -597,6 +604,17 @@ function correctionBlock(analysis, voice) {
     </div>
   `).join("");
   return `<div class="reasoning-grid">${items}</div>`;
+}
+
+function buildPerspectiveLine(voiceName, voice) {
+  const openings = {
+    "C.S. Lewis": "A C.S. Lewis-style perspective might notice",
+    "Thoughtful pastor": "A thoughtful pastor perspective might notice",
+    "Trusted Christian friend": "A trusted Christian friend perspective might notice"
+  };
+  const opening = openings[voiceName] || `Seen through the perspective of ${voiceName}, Shepherd might notice`;
+
+  return `${opening}: ${voice.comfort} ${voice.challenge}`;
 }
 
 function buildScriptureSelection(analysis) {
@@ -685,12 +703,12 @@ function buildConsiderations(analysis) {
   return unique(considerations).slice(0, 5);
 }
 
-function buildConfidenceNote(analysis) {
-  return `<p><strong>${escapeHtml(analysis.confidence.level)}:</strong> ${escapeHtml(analysis.confidence.note)}</p>`;
-}
-
 function buildPrayer(data, analysis, voice) {
-  return `Lord Jesus, meet me with truth and mercy. Help me name ${analysis.possibleSpiritualIssue} without panic or self-deception. Give me ${voice.emphasis}, Scripture held in context, and courage to seek wise human help. Amen.`;
+  const lensRequest = data.voice === "Shepherd"
+    ? "Give me truth and mercy"
+    : `Let this ${data.voice} perspective serve truth and mercy`;
+
+  return `Lord Jesus, meet me with truth and mercy. Help me name ${analysis.possibleSpiritualIssue} without panic or self-deception. ${lensRequest}, Scripture held in context, and courage to seek wise human help. Amen.`;
 }
 
 function buildHumanNextStep(analysis) {
@@ -741,7 +759,7 @@ function renderVoiceComparison(data, analysis) {
   }
 
   result.insertAdjacentHTML("beforeend", section(
-    "Compare Faithful Perspectives",
+    "Additional Faithful Perspectives",
     "Discernment training",
     `
       <div id="voice-comparison">
@@ -773,10 +791,6 @@ function buildBoundaries(analysis) {
     "User input is not stored, transmitted, analyzed by an AI API, or saved to browser storage.",
     "If safety, abuse, self-harm, severe depression, medical concerns, violence, or legal danger may be involved, seek appropriate human help immediately."
   ];
-
-  if (analysis.confidence.level === "Low") {
-    boundaries.push("Because confidence is low, treat the reflection as a conversation starter rather than a conclusion.");
-  }
 
   return boundaries;
 }
