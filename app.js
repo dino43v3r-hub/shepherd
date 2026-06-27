@@ -637,24 +637,33 @@ function renderPlan(data, composedResponse) {
   result.className = "result";
   result.innerHTML = `
     <div class="result-header">
-      <h2>Your discernment draft</h2>
-      <p>This is a static, in-browser Christian reflection. It is meant to prepare you for prayer, Scripture, and human care.</p>
-      <p class="fine-print">${escapeHtml(isPrimaryShepherd ? "Primary guide" : "Primary guide: Shepherd. Perspective lens")}: ${escapeHtml(data.voice)}. Emphasis: ${escapeHtml(voice.emphasis)}.</p>
+      <h2>A pastoral response</h2>
+      <p>This is meant to help you pray, think clearly, and know what faithful next step to take with real human support.</p>
+      <p class="fine-print">${escapeHtml(isPrimaryShepherd ? "Voice" : "Voice, as a perspective lens")}: ${escapeHtml(data.voice)}.</p>
       <div class="result-actions">
         <button type="button" id="print-button" class="primary">Print / Save as PDF</button>
         <button type="button" id="compare-button" class="secondary">Additional Faithful Perspectives</button>
         <button type="button" id="result-clear-button" class="secondary">Clear Everything</button>
       </div>
     </div>
-    ${section("Pastoral Acknowledgment", "Pastoral wisdom", paragraph(composedResponse.pastoralAcknowledgment))}
-    ${section("Truth / Correction", "Discernment", paragraph(composedResponse.truthCorrection))}
-    ${section("Divine Pattern Insight", "Pastoral pattern summary", paragraph(composedResponse.divinePatternInsight))}
-    ${section("Things You May Not Have Considered", "Discernment considerations", list(composedResponse.thingsNotConsidered))}
-    ${section("Practical Next Step", "Caution / safety boundary", paragraph(composedResponse.practicalNextStep))}
-    ${section("Short Prayer", "Prayer", paragraph(composedResponse.shortPrayer))}
+    ${conversationSections(composedResponse.sections)}
   `;
   result.classList.remove("hidden");
   result.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function conversationSections(sections) {
+  return sections.map((item) => {
+    const heading = item.heading ? `<h3>${escapeHtml(item.heading)}</h3>` : "";
+    const content = item.items ? list(item.items) : paragraph(item.content);
+
+    return `
+      <section class="result-section conversational-section">
+        ${heading}
+        ${content}
+      </section>
+    `;
+  }).join("");
 }
 
 function buildDivinePatternLayer(divinePatternAnalysis) {
