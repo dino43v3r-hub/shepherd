@@ -289,3 +289,11 @@ Shepherd/
 - Expand Scripture context notes and denominational summaries
 - Add broader pastoral review from different Christian traditions
 - Add accessibility testing and keyboard-flow refinements
+
+## License
+
+This repository is currently released under **All Rights Reserved**.
+
+The source code is publicly visible for transparency and collaboration discussions only.
+
+No permission is granted to copy, modify, redistribute, or use this software without written permission from the copyright holder.
