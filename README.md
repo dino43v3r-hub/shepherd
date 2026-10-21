@@ -251,7 +251,7 @@ All analysis is transient and in memory while the page is open.
 
 Open `index.html` in a browser. No build step is required.
 
-Developer debug mode is available by adding `?debug` or `#debug` to the page URL. In that mode, Shepherd writes the internal Understanding Engine object, Discernment Engine object, legacy correction analysis, Divine Pattern analysis, Rule of Life object, and composed response structure to the browser console for testing. Normal users do not see these objects in the page.
+Shepherd does not log reflection analysis or composed responses to the browser console. This helps keep sensitive pastoral reflections private, including when `?debug` or `#debug` appears in the page URL.
 
 ## Project Structure
 

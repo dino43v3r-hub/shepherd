@@ -12,8 +12,6 @@ const { buildVoiceContext } = window.ShepherdVoiceReasoningEngine || {};
 // Shepherd has no backend, database, analytics, storage, or AI API.
 // User text lives only in browser memory while this page is open.
 let sessionDraft = null;
-const developerDebugEnabled = new URLSearchParams(window.location.search).has("debug")
-  || window.location.hash.toLowerCase().includes("debug");
 
 const crisisTerms = [
   "suicide",
@@ -344,7 +342,6 @@ form.addEventListener("submit", (event) => {
     concernAnalysis: analysis
   });
 
-  logDeveloperDebug({ understanding, discernment, analysis, divinePatternAnalysis, ruleOfLife, voiceContext, composedResponse });
   renderPlan(sessionDraft, composedResponse);
 });
 
@@ -546,21 +543,6 @@ function getConfidence(weightedPatternScore, detectedPatternCount, matchCount) {
     level: "Low",
     note: "Shepherd may be missing important context; bring this to a trusted person who can listen more fully."
   };
-}
-
-function logDeveloperDebug(payload) {
-  if (!developerDebugEnabled) {
-    return;
-  }
-
-  console.group("Shepherd developer debug");
-  console.log("Understanding object", payload.understanding);
-  console.log("Discernment object", payload.discernment);
-  console.log("Discernment / correction analysis", payload.analysis);
-  console.log("Divine Pattern analysis", payload.divinePatternAnalysis);
-  console.log("Rule of Life object", payload.ruleOfLife);
-  console.log("Composed response structure", payload.composedResponse);
-  console.groupEnd();
 }
 
 function renderPlan(data, composedResponse) {
